@@ -14,7 +14,7 @@ const registeruser = asynchandler(async(req,res)=>{
   const existeduser = await User.findOne({
     $or =[{username},{email}]
   })
-})
+
 if(existeduser){
   throw new apiError(409,"User with same username or email exists");
 }
@@ -43,4 +43,8 @@ if(!avatarlocalpath){
   throw new apiError(500,"something went wrong while registering user")
  }
 
- 
+ return res.statuscode(200).json(
+  new apiresponse(200,createduser,"User registered successfully")
+ )
+
+})
