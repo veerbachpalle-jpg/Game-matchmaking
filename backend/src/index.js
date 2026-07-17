@@ -7,7 +7,10 @@ app.get('/',(req,res)=>{
   res.send("hiii")
 })
 
-
-app.listen(process.env.PORT,()=>{
+import connectDb from './Db/connetctdb';
+connectDb().then(app.listen(process.env.PORT,()=>{
   console.log(`system is running at port ${process.env.PORT}`);
-})
+})).
+catch((error)=>
+  console.log(error)
+)

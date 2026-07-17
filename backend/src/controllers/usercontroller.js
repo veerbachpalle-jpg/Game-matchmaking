@@ -1,6 +1,7 @@
 import { asynchandler } from "../utils/AsyncHandler";
 import { User } from "../models/user.models";
 import { apiError } from "../utils/Apierrors";
+import { uploadoncloudinary } from "../utils/cloudinary";
 
 
 const registeruser = asynchandler(async(req,res)=>{
@@ -11,7 +12,7 @@ const registeruser = asynchandler(async(req,res)=>{
     throw new apiError(400,"All fields are compulsory")
   }
   const existeduser = await User.findOne({
-    $or =[{username},{email}];
+    $or =[{username},{email}]
   })
 })
 if(existeduser){
@@ -25,5 +26,21 @@ if(!avatarlocalpath){
     "avatar image is compulsory"
   )
 }
+ avatar = await uploadoncloudinary(avatarlocalpath);
+ coverimagepath = await uploadoncloudinary(coverimagepath)
+
+ const user = await User.create({
+  username,
+  password,
+  avatar: avatar.url,
+  coverimage: coverimage?.url,
+  email
+ })
+
+ const createduser = User.findById(user._id).select("-password -refreshtoken")
+
+ if(!createduser){
+  throw new apiError(500,"something went wrong while registering user")
+ }
 
  
