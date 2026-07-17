@@ -1,6 +1,7 @@
 import mongoose, {Schema} from 'mongoose';
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
+import { type } from 'os';
 
 const UserSchema = new Schema({
   username:{
@@ -30,6 +31,9 @@ const UserSchema = new Schema({
   coverimage:{
     type:String,
     required: true
+  },
+  refreshtoken:{
+    type:String
   }
 },{timestamps:true})
 

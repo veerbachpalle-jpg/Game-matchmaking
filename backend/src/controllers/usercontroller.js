@@ -11,6 +11,7 @@ const generateAccessandRefreshtokens = async (userid)=>{
     const Accesstokens = await user.generateAccessTokens()
 
     await user.save({validateBeforeSave:false})
+    return {Accesstokens,refreshtoken}
   }
   catch(error){
     console.log("error in generating access and refreshtokens",error)
@@ -64,3 +65,37 @@ if(!avatarlocalpath){
 
 })
 
+const loginuser = asynchandler(async(req,res)=>{
+  const {username,email,password}= req.body
+  if(!(username || email)){
+    throw new apiError(400,"username or email is required")
+  }
+  const user = await User.findOne({
+    $or:
+      [{username},{email}]
+    
+  })
+  const ispasswordvalid = await user.checkpassword(password)
+  if(!ispasswordvalid){
+    throw new apiError(404,"invalid user credentials")
+  }
+  const {Accesstokens,refreshToken} = await generateAccessandRefreshtokens(user._id)
+  const loggedinuser = await User.findById(user._id).select("-password -refreshtoken")
+
+   const options = {
+    httpOnly : true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+  }
+
+  return res.
+  status(200)
+  .cookie("accesstoken",Accesstokens,options)
+  .cookie("refreshToken",refreshToken,options)
+  .json(
+    new apiresponse(
+      200,{
+        user:loggedInUser,accessToken,refreshToken},
+        "User logged In Successfuuly"
+    ))
+})
