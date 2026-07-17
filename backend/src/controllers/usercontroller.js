@@ -99,3 +99,44 @@ const loginuser = asynchandler(async(req,res)=>{
         "User logged In Successfuuly"
     ))
 })
+
+const logoutuser = asynchandler(async(req,res)=>{
+  User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set:{
+        refreshtoken:undefined
+      }
+    },
+    {new:false}
+  )
+  const options = {
+    httpOnly:true,
+    secure: process.env.NODE_ENV ==="production",
+    sameSite: process.env.NODE_ENV ==="production" ? "none":"lax"
+  }
+  return res.
+  statuscode(200).
+  clearcookies("accesstoken",options).
+  clearcookies("refreshToken",options).
+  json(
+    new apiresponse(200,"User logged out Successfuly")
+  )
+})
+
+const changepassword = asynchandler(async(req,res)=>{
+  const {password,newpassword} = req.body
+  const user = await User.findById(req.user._id)
+  const validatepassword = await user.checkpassword(password)
+  if(!validatepassword){
+    throw new apiError(400,"old password is incorrect")
+  }
+  user.password= newpassword
+  await User.save({validateBeforeSave:false})
+
+  return res.
+  statuscode(200).
+  json(
+    new apiresponse(200,{},"User password changed successfully") 
+  )
+})
