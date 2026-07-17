@@ -4,6 +4,21 @@ import { apiError } from "../utils/Apierrors";
 import { uploadoncloudinary } from "../utils/cloudinary";
 
 
+const generateAccessandRefreshtokens = async (userid)=>{
+  try{
+    const user = await User.findById(userid)
+    const refreshtoken = await user.generateRefreshTokens()
+    const Accesstokens = await user.generateAccessTokens()
+
+    await user.save({validateBeforeSave:false})
+  }
+  catch(error){
+    console.log("error in generating access and refreshtokens",error)
+    throw error
+  }
+}
+
+
 const registeruser = asynchandler(async(req,res)=>{
   const {username,email,password}= req.body
   if(
@@ -48,3 +63,4 @@ if(!avatarlocalpath){
  )
 
 })
+
