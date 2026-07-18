@@ -1,6 +1,7 @@
 import { asynchandler } from "../utils/AsyncHandler";
 import { User } from "../models/user.models";
 import { apiError } from "../utils/Apierrors";
+import mongoose from "mongoose";
 import { uploadoncloudinary } from "../utils/cloudinary";
 
 
@@ -138,5 +139,33 @@ const changepassword = asynchandler(async(req,res)=>{
   statuscode(200).
   json(
     new apiresponse(200,{},"User password changed successfully") 
+  )
+})
+const addfriends = asynchandler(async(req,res)=>{
+  const userid = req.user._id
+  const {friendId} = req.body
+  if(!mongoose.Types.ObjectId.isValid(friendId)){
+    throw new apiError(400,"Invalid friend Id")
+  }
+  if(userid.toString()=== friendId){
+    throw new apiError(400,"user cannot add itself to friend list")
+  }
+  const currentuser = await User.findById(userid)
+  const frienduser = await User.findById(friendId)
+  if(!currentuser || !frienduser){
+    throw new apiError(404,"User not found")
+  }
+  if(currentuser.friends.includes(frienduser)){
+    throw new apiError(400,"users are already friends")
+  }
+  const user = currentuser.addfriends(frienduser._id)
+  const friend = frienduser.addfriends(currentuser._id)
+
+  await currentuser.save({validateBeforeSave:false})
+  await frienduser.save({validateBeforeSave:false})
+
+  res.statuscode(200).
+  json(
+    new apiresponse(200,{},"friend added successfully")
   )
 })

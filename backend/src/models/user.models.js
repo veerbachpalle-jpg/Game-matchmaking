@@ -32,9 +32,19 @@ const UserSchema = new Schema({
     type:String,
     required: true
   },
+  rank:{
+    type:String
+  },
+
   refreshtoken:{
     type:String
-  }
+  },
+  friends: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User"
+    }]
+
 },{timestamps:true})
 
 UserSchema.pre("save",async function(next){
@@ -65,6 +75,11 @@ UserSchema.methods.generateRefreshTokens = async function(){
     expiresIn:process.env.REFRESH_TOKEN_EXPIRY
   }
 )
+}
+UserSchema.methods.addfriends = async function (friendId) {
+  if(!this.friends.includes(friendId))
+    this.friends.push(friendId)
+  
 }
 
 
