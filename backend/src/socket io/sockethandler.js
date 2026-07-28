@@ -2,6 +2,7 @@ import {Server} from 'socket.io';
 import { Jwt } from 'jsonwebtoken';
 import { User } from '../models/user.models';
 import { Socket } from 'dgram';
+import { matchmaker } from '../Matchfunction/matchmaker';
 
 
 const JWT_SECRET = process.env.JWT_SECRET
@@ -42,5 +43,60 @@ export const setupsockethandler = (io)=>{
 
     socket.join(userId);
     await User.findByIdAndUpdate(userId,{status:'online',})
+
+    socket.on('join-queue',async(data)=>{
+      try {
+        const {ping, region,gamemode} = data;
+        const user = await User.findById(user)
+        if(!user) return
+        const mmr = user.mmr
+  
+        console.log(`User:${username} joining the ${gamemode}`)
+
+        await matchmaker.addticket(
+          userId,
+          username,
+          ping,
+          mmr,
+          region,
+          gamemode
+        )
+
+        socket.emit('queue-joined',{
+          gamemode,
+          region,
+          ping
+        })
+      } catch (error) {
+        console.log("error in joing the queue ",error)
+        socket.emit('error',{
+          message: "failed to join matchmaking queue"
+        })
+      }
+    })
+    socket.on('leave-queue',async(data)=>{
+      try {
+        console.log(`user:${username}is leaving the queue`)
+
+        await matchmaker.removeticket(userId);
+         socket.emit('queue left')
+        
+      } catch (error) {
+        console.log("error in leaving the queue ",error)
+      }
+    })
   })
+
+  socket.on('game-input',async(data)=>{
+
+  })
+  socket.on('join-game-room',async (data)=>{
+    console.log(`user:${username} joined the room ${data.roomId}`)
+
+    socket.join(data.roomId);
+    useractiverooms.set(userId,data.roomId)
+    await User.findByIdAndUpdate(userId,{status:'In-game'})
+    
+  })
+  
 }
