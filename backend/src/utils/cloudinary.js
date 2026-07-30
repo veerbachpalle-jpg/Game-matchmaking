@@ -29,6 +29,6 @@ const uploadoncloudinary = async (localfilepath)=>{
     if (fs.existsSync(localfilepath)) {
       fs.unlinkSync(localfilepath);
     }
-  }
+  }}
 
-export {uploadoncloudinary}
+export {uploadoncloudinary }

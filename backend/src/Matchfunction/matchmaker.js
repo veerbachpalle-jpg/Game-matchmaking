@@ -3,6 +3,7 @@ import { redis } from "./redisclient";
 import { asynchandler } from "../utils/AsyncHandler";
 import mongoose from "mongoose";
 import { Matchhistory } from "../models/Matchhistory.model";
+import { gameManager } from "./gameManager";
 
 const REGIONS = ['mid-india', 'south-india', 'north-india'];
 const GAMEMODES = ['1v1', 'four-player'];
@@ -221,9 +222,15 @@ export const matchmaker = {
       })
       await gamerecord.save();
 
+      const gameSession = gameManager.createGame(
+        gamerecord._id.toString(),
+        players[0].userId,
+        players[1].userId
+      );
+
       players.forEach((player) => {
         io.to(player.userId).emit("match-found", {
-          matchId: gamerecord._id,
+          matchId: gamerecord._id.toString(),
           gameMode: gamemode,
           region,
           players: players.map((p) => ({
@@ -231,6 +238,7 @@ export const matchmaker = {
             username: p.username,
             mmr: p.mmr,
           })),
+          gameState: gameSession
         });
       });
 

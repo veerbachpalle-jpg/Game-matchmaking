@@ -1,25 +1,22 @@
-import { Server } from 'socket.io';
-import { Jwt } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { User } from '../models/user.models';
-import { Socket } from 'dgram';
 import { matchmaker } from '../Matchfunction/matchmaker';
+import { gameManager } from '../Matchfunction/gameManager';
 
-
-const JWT_SECRET = process.env.JWT_SECRET
-
-const useractiverooms = new map()
+const useractiverooms = new Map();
 
 export const setupsockethandler = (io) => {
 
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.headers['authorisation']?.split(' ')[1];
+      const token = socket.handshake.auth?.token || socket.handshake.headers['authorization']?.split(' ')[1] || socket.handshake.headers['authorisation']?.split(' ')[1];
 
       if (!token) {
         return next(new Error("authentication error : no token found "))
       }
 
-      const decoded = jwt.verify(token, JWT_SECRET)
+      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      socket.data.userId = decoded._id;
 
       socket.data.userId = decoded.userId
 
@@ -56,8 +53,8 @@ export const setupsockethandler = (io) => {
         await matchmaker.addticket(
           userId,
           username,
-          ping,
           mmr,
+          ping,
           region,
           gamemode
         )
@@ -73,14 +70,39 @@ export const setupsockethandler = (io) => {
           message: "failed to join matchmaking queue"
         })
       }
-    })
-    socket.on('leave-queue', async (data) => {
+    });
+
+    socket.on('leave-queue', async () => {
       try {
         console.log(`user:${username}is leaving the queue`)
 
         await matchmaker.removeticket(userId);
-        socket.emit('queue left')
+        socket.emit('queue-left');
+      } catch (error) {
+        console.log("Error in leaving queue:", error);
+      }
+    });
 
+    socket.on('join-game-room', async (data) => {
+      console.log(`User: ${username} joined room ${data.roomId}`);
+      socket.join(data.roomId);
+      useractiverooms.set(userId, data.roomId);
+      await User.findByIdAndUpdate(userId, { status: 'in-game' });
+    });
+
+    socket.on('make-move', async (data) => {
+      try {
+        const { matchId, position } = data;
+        const result = gameManager.makeMove(matchId, userId, position);
+
+        if (!result.success) {
+          return socket.emit('move-error', { message: result.message });
+        }
+
+        io.to(matchId).emit('game-updated', {
+          matchId,
+          gameState: result.game
+        });
       } catch (error) {
         console.log("error in leaving the queue ", error)
       }
@@ -88,15 +110,26 @@ export const setupsockethandler = (io) => {
   })
 
   socket.on('game-input', async (data) => {
+    try {
+      const { matchId, position } = data;
+      const result = gameManager.makeMove(matchId, userId, position);
 
-  })
-  socket.on('join-game-room', async (data) => {
-    console.log(`user:${username} joined the room ${data.roomId}`)
+      if (!result.success) {
+        return socket.emit('move-error', { message: result.message });
+      }
 
-    socket.join(data.roomId);
-    useractiverooms.set(userId, data.roomId)
-    await User.findByIdAndUpdate(userId, { status: 'In-game' })
+      io.to(matchId).emit('game-updated', {
+        matchId,
+        gameState: result.game
+      });
+    } catch (error) {
+      console.log("Error handling game input:", error);
+    }
+  });
 
-  })
-
+  socket.on('disconnect', async () => {
+    console.log(`Socket disconnected for user: ${username}`);
+    await matchmaker.removeticket(userId);
+    await User.findByIdAndUpdate(userId, { status: 'offline' });
+  });
 }
