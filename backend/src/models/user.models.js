@@ -1,28 +1,18 @@
 import mongoose, {Schema} from 'mongoose';
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
-import { type } from 'os';
 
 const UserSchema = new Schema({
   username:{
     type: String,
     required : true,
     unique: true,
-    lowercase:true,
-    index:true,
-    trim:true
+    lowercase: true,
+    trim: true
   },
-  email:{
+  password: {
     type: String,
-    required:true,
-    unique:true,
-    lowercase:true,
-    trim:true
-  },
-  password:{
-    type:String,
-    required : [true,"Password is required"]
-
+    required: [true, "Password is required"]
   },
   avatar:{
     type: String,
@@ -35,7 +25,11 @@ const UserSchema = new Schema({
   rank:{
     type:String
   },
-
+  role:{
+    type:String,
+    enum:["user","admin"],
+    default:"user"
+  },
   refreshtoken:{
     type:String
   },
@@ -44,17 +38,17 @@ const UserSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: "User"
     }],
-    status: {
+  status: {
       type:String,
       default:"offline"
-    }
+  }
 
 },{timestamps:true})
 
 UserSchema.pre("save",async function(next){
-  if(!this.isModified(this.password))return
-  this.password = await hash.bcrypt(this.password,10)
-
+  if(!this.isModified("password"))return next()
+  this.password = await bcrypt.hash(this.password,10)
+  next()
 })
 UserSchema.methods.checkpassword= async function (password) {
   return await bcrypt.compare(password,this.password)
@@ -63,7 +57,8 @@ UserSchema.methods.generateAccessTokens = async function(){
   return  jwt.sign({
     _id:this._id,
     username: this.username,
-    email:this.email
+    email:this.email,
+    role:this.role
   },
   process.env.ACCESS_TOKEN_SECRET,
   {
@@ -84,7 +79,7 @@ UserSchema.methods.addfriends = async function (friendId) {
   if(!this.friends.includes(friendId))
     this.friends.push(friendId)
   
-}
+  }
 
 
 export const User = mongoose.model("User",UserSchema)

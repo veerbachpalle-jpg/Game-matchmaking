@@ -1,13 +1,11 @@
-import {v2 as cloudinary} from 'cloudiary';
-import fs from 'fs'
-import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
+import fs from 'fs';
 
 cloudinary.config({
-  cloudinary_name = process.env.CLOUDINARY_CLOUD_NAME,
-  cloudinary_api = process.env.CLOUDINARY_API_KEY,
-  api_secret = process.env.CLOUDINARY_API_SECRET
-}
-);
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const uploadoncloudinary = async (localfilepath)=>{
   try{
@@ -28,10 +26,9 @@ const uploadoncloudinary = async (localfilepath)=>{
   } catch(error){
     console.log("cloudinary error",error)
 
-    if(fs.existsSync(localfilepath))
-      fdatasync.unlinkSync(localfilepath)
+    if (fs.existsSync(localfilepath)) {
+      fs.unlinkSync(localfilepath);
+    }
   }
-
-}
 
 export {uploadoncloudinary}
