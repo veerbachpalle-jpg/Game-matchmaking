@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import fs from 'fs';
-import router from './routes/userRoutes.router';
-import matchRouter from './routes/matchRoutes.router';
+import router from './routes/userRoutes.router.js';
+import matchRouter from './routes/matchRoutes.router.js';
 
 fs.mkdirSync("./Public/temp",{recursive:true})
 

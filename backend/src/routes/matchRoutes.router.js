@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { matchmaker } from "../Matchfunction/matchmaker";
-import { verifyJWT, verifyAdmin } from "../middlewares/auth";
+import { matchmaker } from "../Matchfunction/matchmaker.js";
+import { verifyJWT, verifyAdmin } from "../middlewares/auth.js";
 
 const router = Router();
 

@@ -1,9 +1,9 @@
-import { User } from "../models/user.models";
-import { redis } from "./redisclient";
-import { asynchandler } from "../utils/AsyncHandler";
+import { User } from "../models/user.models.js";
+import { redis } from "./redisclient.js";
+import { asynchandler } from "../utils/AsyncHandler.js";
 import mongoose from "mongoose";
-import { Matchhistory } from "../models/Matchhistory.model";
-import { gameManager } from "./gameManager";
+import { Matchhistory } from "../models/Matchhistory.model.js";
+import { gameManager } from "./gameManager.js";
 
 const REGIONS = ['mid-india', 'south-india', 'north-india'];
 const GAMEMODES = ['1v1', 'four-player'];

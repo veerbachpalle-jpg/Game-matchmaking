@@ -1,10 +1,10 @@
 import http from 'http';
 import dotenv from 'dotenv';
 import { Server } from 'socket.io';
-import app from './app';
-import connectDb from './Db/connetctdb';
-import { setupsockethandler } from './socket io/sockethandler';
-import { matchmaker } from './Matchfunction/matchmaker';
+import app from './app.js';
+import connectDb from './Db/connetctdb.js';
+import { setupsockethandler } from './socket io/sockethandler.js';
+import { matchmaker } from './Matchfunction/matchmaker.js';
 
 dotenv.config();
 

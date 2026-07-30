@@ -1,9 +1,9 @@
-import { asynchandler } from "../utils/AsyncHandler";
-import { User } from "../models/user.models";
-import { apiError } from "../utils/Apierrors";
+import { asynchandler } from "../utils/AsyncHandler.js";
+import { User } from "../models/user.models.js";
+import { apiError } from "../utils/Apierrors.js";
 import mongoose from "mongoose";
-import { uploadoncloudinary } from "../utils/cloudinary";
-import { apiresponse } from "../utils/apiresponse";
+import { uploadoncloudinary } from "../utils/cloudinary.js";
+import { apiresponse } from "../utils/apiresponse.js";
 
 const generateAccessandRefreshtokens = async (userid)=>{
   try{

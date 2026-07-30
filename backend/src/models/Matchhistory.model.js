@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-
+import { User } from "./user.models.js";
 const MatchhistorySchema = new Schema({
   players:[{
     user:{
@@ -24,7 +24,7 @@ const MatchhistorySchema = new Schema({
   },
   result:{
     winnerId:{
-      type:User.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref:"User"
     },
     scores:{

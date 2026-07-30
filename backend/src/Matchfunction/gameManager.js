@@ -1,5 +1,5 @@
-import { Matchhistory } from "../models/Matchhistory.model";
-import { User } from "../models/user.models";
+import { Matchhistory } from "../models/Matchhistory.model.js";
+import { User } from "../models/user.models.js";
 
 class GameManager {
   constructor() {
