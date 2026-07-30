@@ -18,8 +18,10 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 import router from './routes/userRoutes.router'
+import matchRouter from './routes/matchRoutes.router'
 
 app.use("/user",router)
+app.use("/match",matchRouter)
 
 import { ApiError } from './utils/Apierrors'
 app.use(ApiError)
