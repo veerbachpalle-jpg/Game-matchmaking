@@ -5,6 +5,39 @@ import mongoose from "mongoose";
 import { Matchhistory } from "../models/Matchhistory.model.js";
 import { gameManager } from "./gameManager.js";
 
+const botCache = [];
+
+async function getOrCreateBotUsers(count) {
+  if (botCache.length >= count) {
+    return botCache.slice(0, count);
+  }
+  const botNames = [
+    { username: "bot_viper", email: "bot_viper@arena.gg" },
+    { username: "bot_ghost", email: "bot_ghost@arena.gg" },
+    { username: "bot_apex", email: "bot_apex@arena.gg" }
+  ];
+
+  for (const b of botNames) {
+    let user = await User.findOne({ username: b.username });
+    if (!user) {
+      user = await User.create({
+        username: b.username,
+        email: b.email,
+        password: "botpassword123",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop",
+        coverimage: "",
+        rank: "Bronze",
+        mmr: 1000,
+        role: "user"
+      });
+    }
+    if (!botCache.some(u => u._id.toString() === user._id.toString())) {
+      botCache.push(user);
+    }
+  }
+  return botCache.slice(0, count);
+}
+
 const REGIONS = ['mid-india', 'south-india', 'north-india'];
 const GAMEMODES = ['1v1', 'four-player'];
 
@@ -12,27 +45,28 @@ export const matchmaker = {
   async addticket(
     userId,
     username,
-    mmr,
-    ping,
-    region,
-    gamemode
+    mmr = 1000,
+    ping = 40,
+    region = "mid-india",
+    gamemode = "four-player"
   ) {
+    const userMmr = Number(mmr) || 1000;
+    const userPing = Number(ping) || 40;
     const queuekey = `queue:${gamemode}:${region}`
     const ticketkey = `ticket:${userId}`
     const joinedAt = Date.now()
 
     await redis.hset(ticketkey, {
-      userId,
-      username,
-      mmr: mmr.toString(),
-      ping: ping.toString(),
+      userId: userId.toString(),
+      username: username || "Player",
+      mmr: userMmr.toString(),
+      ping: userPing.toString(),
       joinedAt: joinedAt.toString(),
       region,
       gamemode,
-
     });
 
-    await redis.zadd(queuekey, mmr, userId)
+    await redis.zadd(queuekey, userMmr, userId.toString())
 
     await User.findByIdAndUpdate(userId, {
       status: 'Inqueue'
@@ -76,11 +110,7 @@ export const matchmaker = {
       try {
         for (const gamemode of GAMEMODES) {
           for (const region of REGIONS) {
-            await this.processQueue(
-              gamemode,
-              region,
-              io
-            );
+            await this.processQueue(gamemode, region, io);
           }
         }
       } catch (error) {
@@ -162,6 +192,23 @@ export const matchmaker = {
         }
       }
 
+      if (candidates.length < requiredCandidates && waitTimeSeconds >= 60) {
+        const needed = requiredCandidates - candidates.length;
+        const botUsers = await getOrCreateBotUsers(needed);
+        for (let b = 0; b < needed; b++) {
+          const bot = botUsers[b];
+          candidates.push({
+            userId: bot._id.toString(),
+            username: bot.username,
+            mmr: bot.mmr || 1000,
+            ping: Math.floor(15 + Math.random() * 25),
+            region: region,
+            gamemode: gamemode,
+            joinedAt: Date.now()
+          });
+        }
+      }
+
       if (candidates.length === requiredCandidates) {
 
         const matchGroup = [
@@ -191,6 +238,18 @@ export const matchmaker = {
           matchGroup,
           io
         );
+      } else {
+        // Broadcast queue status to the waiting player so the frontend can show
+        // how many are queued and how long until a bot fills the slot.
+        const botFillIn = Math.max(0, Math.ceil(60 - waitTimeSeconds));
+        const realPlayerCount = tickets.filter(t => !t.username.startsWith('bot_')).length;
+        io.to(ticketA.userId).emit('queue-status', {
+          playersInQueue: realPlayerCount,
+          waitSeconds: Math.floor(waitTimeSeconds),
+          botFillIn,
+          gamemode,
+          region,
+        });
       }
     }
   },
@@ -212,33 +271,41 @@ export const matchmaker = {
         }
       )
 
+      // Always put the real (non-bot) player first so they are X and go first.
+      // Bots have usernames starting with "bot_".
+      const sortedPlayers = [...players].sort((a, b) => {
+        const aIsBot = a.username.startsWith('bot_') ? 1 : 0;
+        const bIsBot = b.username.startsWith('bot_') ? 1 : 0;
+        return aIsBot - bIsBot; // real users first, bots last
+      });
+
       const gamerecord = new Matchhistory({
-        players: players.map((player) => ({
+        players: sortedPlayers.map((player) => ({
           user: player.userId,
           mmratmatch: player.mmr
         })),
         gameMode: gamemode,
-        status: 'grouped'
+        status: 'grouped',
+        playerX: sortedPlayers[0].userId,
+        playerO: sortedPlayers[1].userId
       })
       await gamerecord.save();
 
-      const gameSession = gameManager.createGame(
-        gamerecord._id.toString(),
-        players[0].userId,
-        players[1].userId
-      );
+      const matchId = gamerecord._id.toString();
 
-      players.forEach((player) => {
+      console.log(`1v1 match grouped: matchId=${matchId}, X=${sortedPlayers[0].userId} (${sortedPlayers[0].username}), O=${sortedPlayers[1].userId} (${sortedPlayers[1].username})`);
+
+      sortedPlayers.forEach((player) => {
         io.to(player.userId).emit("match-found", {
-          matchId: gamerecord._id.toString(),
+          matchId,
           gameMode: gamemode,
           region,
-          players: players.map((p) => ({
+          players: sortedPlayers.map((p) => ({
             userId: p.userId,
             username: p.username,
             mmr: p.mmr,
           })),
-          gameState: gameSession
+          gameState: null
         });
       });
 
@@ -270,7 +337,7 @@ export const matchmaker = {
 
       players.forEach((player) => {
         io.to(player.userId).emit("four-player-match", {
-          matchId: gamerecord._id,
+          matchId: gamerecord._id.toString(),
           gameMode: 'four-player',
           region,
           avgMmr,
@@ -290,31 +357,47 @@ export const matchmaker = {
   getFourPlayerMatch: asynchandler(async (req, res) => {
     const { matchId } = req.params;
 
-    const match = await Matchhistory.findOne({
-      _id: matchId,
-      gameMode: 'four-player'
-    }).populate('players.user', 'username avatar rank');
+    if (!mongoose.Types.ObjectId.isValid(matchId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid match ID format"
+      });
+    }
+
+    const match = await Matchhistory.findById(matchId).populate('players.user', 'username avatar rank');
 
     if (!match) {
       return res.status(404).json({
         success: false,
-        message: "Four-player match not found"
+        message: "Match not found"
       });
+    }
+
+    let activeGame = gameManager.getGame(matchId);
+    if (!activeGame && match.gameMode === "1v1" && match.status === "ongoing" && match.players.length >= 2) {
+      // Use stored playerX/playerO if available, otherwise fall back to players order
+      const p1 = match.playerX?.toString() || match.players[0].user?._id?.toString() || match.players[0].user?.toString();
+      const p2 = match.playerO?.toString() || match.players[1].user?._id?.toString() || match.players[1].user?.toString();
+      if (p1 && p2) {
+        activeGame = gameManager.createGame(matchId, p1, p2);
+        console.log(`Recreated 1v1 game session: matchId=${matchId}, X=${p1}, O=${p2}`);
+      }
     }
 
     return res.status(200).json({
       success: true,
       data: {
-        matchId: match._id,
+        matchId: match._id.toString(),
         gameMode: match.gameMode,
-        status: match.status,
+        status: activeGame ? activeGame.status : match.status,
         players: match.players.map((p) => ({
-          userId: p.user?._id || p.user,
-          username: p.user?.username || "Unknown",
+          userId: p.user?._id?.toString() || p.user?.toString() || "Unknown",
+          username: p.user?.username || "Operative",
           avatar: p.user?.avatar || "",
           rank: p.user?.rank || "Unranked",
           mmrAtMatch: p.mmratmatch,
         })),
+        gameState: activeGame || null,
         result: match.result || null,
         createdAt: match.createdAt,
       },
@@ -325,7 +408,6 @@ export const matchmaker = {
     const userId = req.user._id;
 
     const matches = await Matchhistory.find({
-      gameMode: 'four-player',
       'players.user': userId
     })
       .sort({ createdAt: -1 })
@@ -335,12 +417,12 @@ export const matchmaker = {
     return res.status(200).json({
       success: true,
       data: matches.map((match) => ({
-        matchId: match._id,
+        matchId: match._id.toString(),
         gameMode: match.gameMode,
         status: match.status,
         players: match.players.map((p) => ({
-          userId: p.user?._id || p.user,
-          username: p.user?.username || "Unknown",
+          userId: p.user?._id?.toString() || p.user?.toString() || "Unknown",
+          username: p.user?.username || "Operative",
           avatar: p.user?.avatar || "",
           rank: p.user?.rank || "Unranked",
           mmrAtMatch: p.mmratmatch,
@@ -355,15 +437,19 @@ export const matchmaker = {
     const { matchId } = req.params;
     const { winnerId, scores } = req.body;
 
-    const match = await Matchhistory.findOne({
-      _id: matchId,
-      gameMode: 'four-player'
-    });
+    if (!mongoose.Types.ObjectId.isValid(matchId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid match ID format"
+      });
+    }
+
+    const match = await Matchhistory.findById(matchId);
 
     if (!match) {
       return res.status(404).json({
         success: false,
-        message: "Four-player match not found"
+        message: "Match not found"
       });
     }
 

@@ -10,6 +10,13 @@ const UserSchema = new Schema({
     lowercase: true,
     trim: true
   },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
   password: {
     type: String,
     required: [true, "Password is required"]
@@ -18,12 +25,17 @@ const UserSchema = new Schema({
     type: String,
     required:true,
   },
-  coverimage:{
-    type:String,
-    required: true
+  coverimage: {
+    type: String,
+    default: ""
   },
-  rank:{
-    type:String
+  rank: {
+    type: String,
+    default: "Bronze"
+  },
+  mmr: {
+    type: Number,
+    default: 1000
   },
   role:{
     type:String,
@@ -45,11 +57,10 @@ const UserSchema = new Schema({
 
 },{timestamps:true})
 
-UserSchema.pre("save",async function(next){
-  if(!this.isModified("password"))return next()
-  this.password = await bcrypt.hash(this.password,10)
-  next()
-})
+UserSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
+});
 UserSchema.methods.checkpassword= async function (password) {
   return await bcrypt.compare(password,this.password)
 }
@@ -60,9 +71,9 @@ UserSchema.methods.generateAccessTokens = async function(){
     email:this.email,
     role:this.role
   },
-  process.env.ACCESS_TOKEN_SECRET,
+  process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "access_token_secret_fallback",
   {
-    expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1d"
   }
   )
 }
@@ -70,8 +81,8 @@ UserSchema.methods.generateAccessTokens = async function(){
 UserSchema.methods.generateRefreshTokens = async function(){
   return jwt.sign({
     _id:this._id
-  },process.env.REFRESH_TOKEN_SECRET,{
-    expiresIn:process.env.REFRESH_TOKEN_EXPIRY
+  }, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET || "refresh_token_secret_fallback", {
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "10d"
   }
 )
 }

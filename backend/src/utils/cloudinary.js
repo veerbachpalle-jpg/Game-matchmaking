@@ -13,8 +13,20 @@ const uploadoncloudinary = async (localfilepath)=>{
       console.log("local file path is not found")
       return null
     }
+
+    if(!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+      console.log("Cloudinary credentials not set, using default image URL");
+      if(fs.existsSync(localfilepath)){
+        fs.unlinkSync(localfilepath);
+      }
+      return {
+        url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop",
+        secure_url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop"
+      };
+    }
+
     const response = await cloudinary.uploader.upload(localfilepath,{
-      response_type:"auto"
+      resource_type:"auto"
     })
 
     console.log("File uploaded successsfully",response.secure_url)
@@ -29,6 +41,10 @@ const uploadoncloudinary = async (localfilepath)=>{
     if (fs.existsSync(localfilepath)) {
       fs.unlinkSync(localfilepath);
     }
+    return {
+      url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop",
+      secure_url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop"
+    };
   }}
 
 export {uploadoncloudinary }

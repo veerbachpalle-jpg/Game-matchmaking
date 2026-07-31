@@ -25,7 +25,7 @@ const generateAccessandRefreshtokens = async (userid)=>{
 const registeruser = asynchandler(async(req,res)=>{
   const {username,email,password}= req.body
   if(
-    [username,email,password].some((field) => field?.trim() ==="")
+    [username,email,password].some((field) => !field || field?.trim() ==="")
   ){
     throw new apiError(400,"All fields are compulsory")
   }

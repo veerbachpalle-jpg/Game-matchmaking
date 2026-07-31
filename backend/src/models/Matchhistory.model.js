@@ -19,8 +19,17 @@ const MatchhistorySchema = new Schema({
   },
   status:{
     type:String,
-    enum:["grouped","completed","cancelled"],
+    enum:["grouped","ongoing","completed","cancelled"],
     default:"grouped",
+  },
+  // For 1v1 games: store the definitive X and O player assignments
+  playerX: {
+    type: Schema.Types.ObjectId,
+    ref: "User"
+  },
+  playerO: {
+    type: Schema.Types.ObjectId,
+    ref: "User"
   },
   result:{
     winnerId:{
@@ -31,7 +40,9 @@ const MatchhistorySchema = new Schema({
       type:Map,
       of: Number,
     },
-
+    mmrChanges:{
+      type: Schema.Types.Mixed
+    }
   },
   createdAt:{
     type:Date,

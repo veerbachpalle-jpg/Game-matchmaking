@@ -11,6 +11,7 @@ let redisInstance;
 try {
   redisInstance = new Redis(redisUri, {
     maxRetriesPerRequest: 1,
+    enableOfflineQueue: false,
     showFriendlyErrorStack: true,
     retryStrategy(times) {
       if (times > 1) {
@@ -47,12 +48,12 @@ class InMemoryRedis {
     if (!this.zsets.has(key)) {
       this.zsets.set(key, new Map());
     }
-    this.zsets.get(key).set(member, score);
+    this.zsets.get(key).set(String(member), Number(score));
   }
 
   async zrem(key, member) {
     if (this.zsets.has(key)) {
-      this.zsets.get(key).delete(member);
+      this.zsets.get(key).delete(String(member));
     }
   }
 
@@ -124,11 +125,8 @@ export const redis = new Proxy(
   {},
   {
     get(target, prop) {
-      if (
-        useInMemoryRedis ||
-        !redisInstance ||
-        typeof redisInstance.on !== 'function'
-      ) {
+      const isReady = redisInstance && redisInstance.status === 'ready';
+      if (useInMemoryRedis || !isReady) {
         return mockRedis[prop];
       }
 
@@ -139,6 +137,7 @@ export const redis = new Proxy(
 
 if (redisInstance && typeof redisInstance.on === 'function') {
   redisInstance.on('connect', () => {
+    useInMemoryRedis = false;
     console.log('Connected to Redis successfully');
   });
 

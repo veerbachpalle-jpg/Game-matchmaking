@@ -1,0 +1,163 @@
+[2026-07-31T20:29:57.116Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: tNb-DhV_0fl-F3uiAAAD
+[2026-07-31T20:29:57.120Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: WDgWdTqEe9-CaRTNAAAB
+[2026-07-31T20:29:57.153Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: rzBxyw6_ZIZ8bSu-AAAJ
+[2026-07-31T20:29:57.320Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: eLBjiPB-s-iVAr42AAAL
+[2026-07-31T20:29:57.365Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: OgBuQ5lZAZrewymEAAAF
+[2026-07-31T20:29:57.401Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: JR-D2gPU7KQ2WRSnAAAH
+[2026-07-31T20:29:57.538Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 5D8BMABo5uHJxC23AAAO
+[2026-07-31T20:29:57.740Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: WLNMkU2u5Q6whRO-AAAP
+[2026-07-31T20:30:20.795Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: kvkwqvojyyXmYRS4AAAS
+[2026-07-31T20:30:20.805Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: -RwJFv7Qg3clTLJsAAAU
+[2026-07-31T20:30:26.013Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: W46BQ3d6YusRtX0lAAAX
+[2026-07-31T20:30:26.029Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: zPCUQ-F6dzCfwqztAAAZ
+[2026-07-31T20:30:34.985Z] [join-game-room] user: vir (6a6cc35ebb93a353e52dc9d4) joined room: 6a6d05eaf2de249fee08596b
+[2026-07-31T20:30:34.987Z] [join-game-room] user: veer (6a6c7a31e6cae66d917f8e18) joined room: 6a6d05eaf2de249fee08596b
+[2026-07-31T20:30:35.112Z] [lobby-init] match=6a6d05eaf2de249fee08596b expectedHumans=2 botIds=[]
+[2026-07-31T20:30:35.113Z] [lobby-init] match=6a6d05eaf2de249fee08596b expectedHumans=2 botIds=[]
+[2026-07-31T20:30:35.160Z] [lobby] Sending lobby-state to vir: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:30:35.161Z] [lobby] Sending lobby-state to veer: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:30:36.783Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: oRnHlW04_QM4NCilAAAc
+[2026-07-31T20:30:36.818Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: xW1-IhV-ca2D3x3JAAAe
+[2026-07-31T20:30:40.826Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: s6g8GGx7EWMbElf1AAAh
+[2026-07-31T20:30:40.842Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 2tIdpXnRPgpYpWCBAAAj
+[2026-07-31T20:30:42.117Z] [player-ready] socket 2tIdpXnRPgpYpWCBAAAj of vir was not in room 6a6d05eaf2de249fee08596b, joining on the fly
+[2026-07-31T20:30:42.118Z] [player-ready] user vir (6a6cc35ebb93a353e52dc9d4) clicked ready in match 6a6d05eaf2de249fee08596b. readyCount=1/2 allReady=false
+[2026-07-31T20:30:45.718Z] [player-ready] socket xW1-IhV-ca2D3x3JAAAe of veer was not in room 6a6d05eaf2de249fee08596b, joining on the fly
+[2026-07-31T20:30:45.718Z] [player-ready] user veer (6a6c7a31e6cae66d917f8e18) clicked ready in match 6a6d05eaf2de249fee08596b. readyCount=2/2 allReady=true
+[2026-07-31T20:30:45.719Z] [player-ready] Starting match 6a6d05eaf2de249fee08596b - calling startGame
+[2026-07-31T20:32:53.121Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: AxIo0b8c8JPd49H6AAAD
+[2026-07-31T20:32:53.156Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: nnGSLbbo0UvFwpiWAAAF
+[2026-07-31T20:32:53.194Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: 9HOe_uBHdrLLiMQBAAAH
+[2026-07-31T20:32:53.294Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: FsT6qDVJ__F7h_7BAAAJ
+[2026-07-31T20:32:53.329Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 8FFV2W_SEl74fCokAAAB
+[2026-07-31T20:32:53.551Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: PLrL-1DiXAmuouYnAAAO
+[2026-07-31T20:32:53.671Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: qRvX4AK1doc8Lrb3AAAL
+[2026-07-31T20:32:53.710Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 4BUfWJxHane6SDwqAAAP
+[2026-07-31T20:33:02.006Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: puJqzhhmQHnWeTNIAAAD
+[2026-07-31T20:33:02.101Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Mf1SLJr8fpzLBUKaAAAF
+[2026-07-31T20:33:02.194Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: rnRYyuvYpyv-mCk3AAAJ
+[2026-07-31T20:33:02.234Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: lf8xMcn2nz4yhukkAAAB
+[2026-07-31T20:33:02.389Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: CJdoileH3rqmYHhFAAAH
+[2026-07-31T20:33:02.508Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: r_uiYadogWpIN8-CAAAL
+[2026-07-31T20:33:02.509Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: JUmXpEUJZeqp3XRnAAAN
+[2026-07-31T20:33:02.722Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: TATfUW5df4lCxldJAAAP
+[2026-07-31T20:34:01.747Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: hNvlHhq36eD_pqWHAAAU
+[2026-07-31T20:34:01.757Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 0z1WVzCvoTvIiXHtAAAV
+[2026-07-31T20:34:01.785Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: EfYwC0aqRm3DyeVRAAAX
+[2026-07-31T20:34:01.822Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: LEEYkHCG_xw_U-XhAAAb
+[2026-07-31T20:34:02.007Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: jNZRGNgos4H6X0feAAAd
+[2026-07-31T20:34:02.876Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: dJa1iLgA7Y9jc2R6AAAg
+[2026-07-31T20:34:02.904Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: WGSsc4t3gH38DRaQAAAl
+[2026-07-31T20:34:02.913Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 6aPwu6wvM4dPCnVpAAAm
+[2026-07-31T20:34:02.950Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Da8zSafnuTjQfDL6AAAo
+[2026-07-31T20:34:03.291Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: iXZmSgUUxxEWrSp0AAAq
+[2026-07-31T20:35:17.266Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: S4GGGZCaiz_7JwYpAAAs
+[2026-07-31T20:35:17.270Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: D-Zr-QNXZeQscEylAAAu
+[2026-07-31T20:35:20.385Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: 1_mfYeR2g2iTyANnAAAw
+[2026-07-31T20:35:20.386Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: Fv2s4aPBVzbBZpghAAAy
+[2026-07-31T20:35:32.403Z] [join-game-room] user: vir (6a6cc35ebb93a353e52dc9d4) joined room: 6a6d07145fe85af82f6bab78
+[2026-07-31T20:35:32.411Z] [join-game-room] user: veer (6a6c7a31e6cae66d917f8e18) joined room: 6a6d07145fe85af82f6bab78
+[2026-07-31T20:35:32.531Z] [lobby-init] match=6a6d07145fe85af82f6bab78 expectedHumans=2 botIds=[]
+[2026-07-31T20:35:32.544Z] [lobby-init] match=6a6d07145fe85af82f6bab78 expectedHumans=2 botIds=[]
+[2026-07-31T20:35:32.572Z] [lobby] Sending lobby-state to vir: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:35:32.587Z] [lobby] Sending lobby-state to veer: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:35:43.514Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: J1WTSa2xpcGJkMnRAAA4
+[2026-07-31T20:35:43.517Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 99kxQczFUtlAsHwFAAA2
+[2026-07-31T20:35:46.507Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: cIu-uzXVUi0zq-zoAAA7
+[2026-07-31T20:35:46.532Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: RkgDuLBQHt5OXhO8AAA9
+[2026-07-31T20:36:03.366Z] [player-ready] socket J1WTSa2xpcGJkMnRAAA4 of vir was not in room 6a6d07145fe85af82f6bab78, joining on the fly
+[2026-07-31T20:36:03.367Z] [player-ready] user vir (6a6cc35ebb93a353e52dc9d4) clicked ready in match 6a6d07145fe85af82f6bab78. readyCount=1/2 allReady=false
+[2026-07-31T20:36:20.793Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: cA-V6y_YP8O8N-TOAAA_
+[2026-07-31T20:36:20.811Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: NAkueCSs_6hjIsiaAABB
+[2026-07-31T20:36:38.050Z] [player-ready] socket NAkueCSs_6hjIsiaAABB of veer was not in room 6a6d07145fe85af82f6bab78, joining on the fly
+[2026-07-31T20:36:38.051Z] [player-ready] user veer (6a6c7a31e6cae66d917f8e18) clicked ready in match 6a6d07145fe85af82f6bab78. readyCount=2/2 allReady=true
+[2026-07-31T20:36:38.051Z] [player-ready] Starting match 6a6d07145fe85af82f6bab78 - calling startGame
+[2026-07-31T20:38:41.390Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: lvguGMHazKEQN1xIAAAE
+[2026-07-31T20:38:41.426Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 16oGPiQ9uK-ifuksAAAG
+[2026-07-31T20:38:41.626Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: JgbxWqLbnV5tMvhMAAAI
+[2026-07-31T20:38:41.698Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: T_Y0BXrQAofoxpJjAAAC
+[2026-07-31T20:38:41.710Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 8VZHPKXghLQ-i6wsAAAN
+[2026-07-31T20:38:41.763Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: _cSMhQsopEVe2hWfAAAP
+[2026-07-31T20:38:41.869Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: IwkfAZRwp7enCXOMAAAK
+[2026-07-31T20:38:41.940Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: M-ncC3HpMgjuL-ILAAAM
+[2026-07-31T20:41:52.539Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: ByB-BtaToCCGOKUSAAAD
+[2026-07-31T20:41:52.616Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: wUW2wG60mWfGL7niAAAF
+[2026-07-31T20:41:52.725Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: DOSj3wyUFdTLLsR9AAAH
+[2026-07-31T20:41:52.810Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: 6KJyDMl95U_0-F51AAAB
+[2026-07-31T20:41:52.837Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: xxqBBY6W4xsbKWGrAAAM
+[2026-07-31T20:41:52.880Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: cNtZAGZBONA3fEypAAAO
+[2026-07-31T20:41:52.904Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Q6Cb9hkwhIXrZ1m5AAAP
+[2026-07-31T20:41:53.074Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Rs7rCm5xyFQF7i0WAAAK
+[2026-07-31T20:42:07.194Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 31N-4Uxzm8S4A-pcAAAU
+[2026-07-31T20:42:07.197Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 98GnLXNcDPevWxhsAAAS
+[2026-07-31T20:44:04.110Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: AFvM4mhTWEPQi98zAAAE
+[2026-07-31T20:44:04.345Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: uuzNdfdBJSnQ8J7vAAAH
+[2026-07-31T20:44:04.480Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: AwtH9EN84M07yYx4AAAJ
+[2026-07-31T20:44:04.612Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: SbA1ntoQidNKWGVeAAAL
+[2026-07-31T20:44:04.744Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: augQ4rjDBKtuFr4MAAAO
+[2026-07-31T20:44:04.749Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: A8t49NSxyjn8ejQ5AAAB
+[2026-07-31T20:44:05.271Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 3TOkVKu4qfuqVb2LAAAN
+[2026-07-31T20:44:05.401Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 8OR9sOWy1y68EBYwAAAP
+[2026-07-31T20:44:33.099Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: CHDqLZMIMdCOvBnfAAAS
+[2026-07-31T20:44:33.115Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: z4Sebfi9_u0QBrIKAAAU
+[2026-07-31T20:44:41.966Z] [join-game-room] user: veer (6a6c7a31e6cae66d917f8e18) joined room: 6a6d0939e863b24f03a5a584
+[2026-07-31T20:44:41.969Z] [join-game-room] user: vir (6a6cc35ebb93a353e52dc9d4) joined room: 6a6d0939e863b24f03a5a584
+[2026-07-31T20:44:42.078Z] [lobby-init] match=6a6d0939e863b24f03a5a584 expectedHumans=2 botIds=[]
+[2026-07-31T20:44:42.098Z] [lobby-init] match=6a6d0939e863b24f03a5a584 expectedHumans=2 botIds=[]
+[2026-07-31T20:44:42.114Z] [lobby] Sending lobby-state to veer: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:44:42.136Z] [lobby] Sending lobby-state to vir: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:44:44.009Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: 24sRicQZ7Cl7Wgz4AAAX
+[2026-07-31T20:44:44.036Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: sVxE_B2nKwsioXLPAAAZ
+[2026-07-31T20:44:47.296Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: v6jO0kjWiqcN1Jt9AAAc
+[2026-07-31T20:44:47.305Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: bG0t2T_-h7TZ0EEmAAAe
+[2026-07-31T20:44:48.615Z] [player-ready] socket bG0t2T_-h7TZ0EEmAAAe of vir was not in room 6a6d0939e863b24f03a5a584, joining on the fly
+[2026-07-31T20:44:48.616Z] [player-ready] user vir (6a6cc35ebb93a353e52dc9d4) clicked ready in match 6a6d0939e863b24f03a5a584. readyCount=1/2 allReady=false
+[2026-07-31T20:44:51.694Z] [player-ready] socket sVxE_B2nKwsioXLPAAAZ of veer was not in room 6a6d0939e863b24f03a5a584, joining on the fly
+[2026-07-31T20:44:51.695Z] [player-ready] user veer (6a6c7a31e6cae66d917f8e18) clicked ready in match 6a6d0939e863b24f03a5a584. readyCount=2/2 allReady=true
+[2026-07-31T20:44:51.696Z] [player-ready] Starting match 6a6d0939e863b24f03a5a584 - calling startGame
+[2026-07-31T20:45:35.137Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Xw1y6IFxEGcVCSa1AAAh
+[2026-07-31T20:45:35.157Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 9_ORlej_Q1RXbOZXAAAj
+[2026-07-31T20:45:38.335Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: luV_xaLZFwJ4vP1cAAAm
+[2026-07-31T20:45:45.309Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: YI4FxxvmWkHUCSf7AAAp
+[2026-07-31T20:46:54.148Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: XCetYYhz34LOCSQTAAAD
+[2026-07-31T20:46:54.184Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: riJl0KVs2W2s3J4ZAAAF
+[2026-07-31T20:46:54.374Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: IM448gWDolQ1whPtAAAH
+[2026-07-31T20:46:54.437Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Ro2npOYvncY7DDf1AAAB
+[2026-07-31T20:46:54.524Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: RVMzzOGK2WIWjbYOAAAK
+[2026-07-31T20:46:54.703Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 1tHeEqptG_tIUpxtAAAL
+[2026-07-31T20:47:22.263Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 2hlx4Wt6aMQ1KLgdAAAC
+[2026-07-31T20:47:22.489Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 5uo90a8DslhKrIBqAAAI
+[2026-07-31T20:47:22.493Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: 3xD7aJc-VzjkyuuUAAAE
+[2026-07-31T20:47:22.504Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 2O_RNr6rsHjQskAYAAAJ
+[2026-07-31T20:47:22.569Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: UbgfrwKtgK6XBlfZAAAG
+[2026-07-31T20:47:22.739Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: VoGn2FYJMHwA81AoAAAL
+[2026-07-31T20:47:30.281Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: yDXmwdbw4YwMSrtyAAAD
+[2026-07-31T20:47:30.318Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: vNS0I5-EzdcnA9Y4AAAF
+[2026-07-31T20:47:30.477Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: nEoe6gHKCcmFbImbAAAB
+[2026-07-31T20:47:30.516Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: YP2xSJoMG0Mc40JlAAAK
+[2026-07-31T20:47:30.662Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: -YU738PB48tqpe5wAAAH
+[2026-07-31T20:47:30.717Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: rGzemq4ZZ4QAz7RzAAAL
+[2026-07-31T20:48:01.656Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: 6YygjF390QiRqmTgAAAO
+[2026-07-31T20:48:01.670Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: y1zCQB1H4QCMa4mUAAAQ
+[2026-07-31T20:48:07.071Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Yy46ZaR7sbLeBgVkAAAU
+[2026-07-31T20:48:07.093Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: M7DlUKwAxWXN6eUEAAAW
+[2026-07-31T20:48:10.271Z] [join-game-room] user: veer (6a6c7a31e6cae66d917f8e18) joined room: 6a6d0a0a55426922ab763fa7
+[2026-07-31T20:48:10.312Z] [join-game-room] user: vir (6a6cc35ebb93a353e52dc9d4) joined room: 6a6d0a0a55426922ab763fa7
+[2026-07-31T20:48:10.417Z] [lobby-init] match=6a6d0a0a55426922ab763fa7 expectedHumans=2 botIds=[]
+[2026-07-31T20:48:10.430Z] [lobby-init] match=6a6d0a0a55426922ab763fa7 expectedHumans=2 botIds=[]
+[2026-07-31T20:48:10.455Z] [lobby] Sending lobby-state to veer: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:48:10.468Z] [lobby] Sending lobby-state to vir: readyCount=0 totalNeeded=2 allReady=false
+[2026-07-31T20:48:12.270Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: bs8zYu-zkcJ7Ypf7AAAZ
+[2026-07-31T20:48:12.281Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: AdRgTuX6W8xZvqBsAAAb
+[2026-07-31T20:48:15.616Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: fSz2cgUSf3nbZ7NpAAAe
+[2026-07-31T20:48:15.636Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: Nw_fZyHVczw9jMadAAAg
+[2026-07-31T20:48:16.782Z] [player-ready] socket Nw_fZyHVczw9jMadAAAg of vir was not in room 6a6d0a0a55426922ab763fa7, joining on the fly
+[2026-07-31T20:48:16.782Z] [player-ready] user vir (6a6cc35ebb93a353e52dc9d4) clicked ready in match 6a6d0a0a55426922ab763fa7. readyCount=1/2 allReady=false
+[2026-07-31T20:48:19.795Z] [player-ready] socket AdRgTuX6W8xZvqBsAAAb of veer was not in room 6a6d0a0a55426922ab763fa7, joining on the fly
+[2026-07-31T20:48:19.796Z] [player-ready] user veer (6a6c7a31e6cae66d917f8e18) clicked ready in match 6a6d0a0a55426922ab763fa7. readyCount=2/2 allReady=true
+[2026-07-31T20:48:19.796Z] [player-ready] Starting match 6a6d0a0a55426922ab763fa7 - calling startGame
+[2026-07-31T20:48:37.466Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: 9AESeHIZP9-BVdYpAAAj
+[2026-07-31T20:48:37.476Z] Socket connected: vir (6a6cc35ebb93a353e52dc9d4), socketId: PuM59z6psE9calWyAAAl
+[2026-07-31T20:48:43.229Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: JbZ0_20njztDv-mhAAAo
+[2026-07-31T20:48:43.245Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: 6pllFfvN5NB5F1oWAAAq
+[2026-07-31T20:48:45.392Z] Socket connected: veer (6a6c7a31e6cae66d917f8e18), socketId: iLtQSaUdjM0q3G5HAAAt
