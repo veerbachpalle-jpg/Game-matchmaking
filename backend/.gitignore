@@ -1,0 +1,6 @@
+node_modules/
+.env
+Public/temp/*
+!Public/temp/.gitkeep
+dist/
+.DS_Store
