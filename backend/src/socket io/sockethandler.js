@@ -106,14 +106,25 @@ async function startGame(io, matchId) {
 export const setupsockethandler = (io) => {
   io.use(async (socket, next) => {
     try {
-      const token =
+      let token =
         socket.handshake.auth?.token ||
         socket.handshake.headers['authorization']?.split(' ')[1] ||
         socket.handshake.headers['authorisation']?.split(' ')[1];
 
+      if (!token && socket.handshake.headers.cookie) {
+        const cookies = Object.fromEntries(
+          socket.handshake.headers.cookie.split(';').map((c) => {
+            const [k, ...v] = c.trim().split('=');
+            return [k, v.join('=')];
+          })
+        );
+        token = cookies.accesstoken || cookies.accessToken;
+      }
+
       if (!token) return next(new Error('Authentication error: no token found'));
 
-      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      const secret = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "super_secret_matchmaker_access_token_key_2026";
+      const decoded = jwt.verify(token, secret);
       const userId = decoded._id || decoded.userId;
       socket.data.userId = String(userId); // always a plain string
 
@@ -123,6 +134,7 @@ export const setupsockethandler = (io) => {
 
       next();
     } catch (error) {
+      console.log('Socket authentication failed:', error.message);
       return next(new Error('Authentication error: Invalid token'));
     }
   });
@@ -314,7 +326,7 @@ export const setupsockethandler = (io) => {
       console.log(`Socket disconnected: ${username}`);
       try {
         await matchmaker.removeticket(userId);
-        await User.findByIdAndUpdate(userId, { status: 'offline' });
+        await User.findByIdAndUpdate(userId, { status: 'online' });
       } catch (err) {
         console.log('disconnect cleanup error:', err);
       }

@@ -5,14 +5,13 @@ import fs from 'fs';
 import router from './routes/userRoutes.router.js';
 import matchRouter from './routes/matchRoutes.router.js';
 
-fs.mkdirSync("./Public/temp",{recursive:true})
+import { getCorsOptions } from './utils/corsOptions.js';
+
+fs.mkdirSync("./Public/temp", { recursive: true })
 
 const app = express()
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN==="*"?true:process.env.CORS_ORIGIN,
-  credentials:true
-}))
+app.use(cors(getCorsOptions()))
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));

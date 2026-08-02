@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-git checkout recovered-historyimport { io, type Socket } from "socket.io-client";
-
+import { io, type Socket } from "socket.io-client";
 import { API_BASE_URL, getToken } from "@/lib/api";
 
 export type QueueState = "idle" | "searching" | "matched" | "error";

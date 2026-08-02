@@ -52,7 +52,17 @@ const UserSchema = new Schema({
     }],
   status: {
       type:String,
-      default:"offline"
+      default:"online"
+  },
+  isverified: {
+    type: Boolean,
+    default: true
+  },
+  emailOtp: {
+    type: String
+  },
+  emailOtpExpiry: {
+    type: Date
   }
 
 },{timestamps:true})
