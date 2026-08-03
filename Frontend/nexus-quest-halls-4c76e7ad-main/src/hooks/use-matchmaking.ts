@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
-git checkout main
-git pull origin mainimport { API_BASE_URL, getToken } from "@/lib/api";
+import { API_BASE_URL, getToken } from "@/lib/api";
 
 
 export type QueueState = "idle" | "searching" | "matched" | "error";
