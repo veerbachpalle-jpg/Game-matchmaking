@@ -8,14 +8,18 @@ const sendVerificationEmail = async (email, otp) => {
     const pass = process.env.SMTP_PASS;
 
     if (host && user && pass) {
+      const targetPort = Number(port) || 587;
       const transporter = nodemailer.createTransport({
         host,
-        port: Number(port) || 587,
-        secure: Number(port) === 465,
+        port: targetPort,
+        secure: targetPort === 465,
         auth: {
           user,
           pass
-        }
+        },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000
       });
 
       await transporter.sendMail({

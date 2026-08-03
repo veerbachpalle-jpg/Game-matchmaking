@@ -6,49 +6,49 @@ import { uploadoncloudinary } from "../utils/cloudinary.js";
 import { apiresponse } from "../utils/apiresponse.js";
 import { sendVerificationEmail } from "../utils/sendEmail.js";
 
-const generateAccessandRefreshtokens = async (userid)=>{
-  try{
+const generateAccessandRefreshtokens = async (userid) => {
+  try {
     const user = await User.findById(userid)
     const refreshtoken = await user.generateRefreshTokens()
     const Accesstokens = await user.generateAccessTokens()
 
     user.refreshtoken = refreshtoken
-    await user.save({validateBeforeSave:false})
-    return {Accesstokens,refreshtoken}
+    await user.save({ validateBeforeSave: false })
+    return { Accesstokens, refreshtoken }
   }
-  catch(error){
-    console.log("error in generating access and refreshtokens",error)
+  catch (error) {
+    console.log("error in generating access and refreshtokens", error)
     throw error
   }
 }
 
 
-const registeruser = asynchandler(async(req,res)=>{
-  const {username,email,password}= req.body
-  if(
-    [username,email,password].some((field) => !field || field?.trim() ==="")
-  ){
-    throw new apiError(400,"All fields are compulsory")
+const registeruser = asynchandler(async (req, res) => {
+  const { username, email, password } = req.body
+  if (
+    [username, email, password].some((field) => !field || field?.trim() === "")
+  ) {
+    throw new apiError(400, "All fields are compulsory")
   }
   const existeduser = await User.findOne({
-    $or:[{username},{email}]
+    $or: [{ username }, { email }]
   })
 
-  if(existeduser){
-    throw new apiError(409,"User with same username or email exists");
+  if (existeduser) {
+    throw new apiError(409, "User with same username or email exists");
   }
 
   const avatarlocalpath = req.files?.avatar?.[0]?.path;
   const coverimagelocalpath = req.files?.coverimage?.[0]?.path;
 
-  if(!avatarlocalpath){
-    throw new apiError(400,"avatar image is compulsory")
+  if (!avatarlocalpath) {
+    throw new apiError(400, "avatar image is compulsory")
   }
 
   const avatar = await uploadoncloudinary(avatarlocalpath);
   const coverimage = coverimagelocalpath ? await uploadoncloudinary(coverimagelocalpath) : null;
 
-  if(!avatar){
+  if (!avatar) {
     throw new apiError(500, "Error uploading avatar to cloud storage");
   }
 
@@ -69,257 +69,260 @@ const registeruser = asynchandler(async(req,res)=>{
 
   const createduser = await User.findById(user._id).select("-password -refreshtoken")
 
-  if(!createduser){
-    throw new apiError(500,"something went wrong while registering user")
+  if (!createduser) {
+    throw new apiError(500, "something went wrong while registering user")
   }
 
-  await sendVerificationEmail(createduser.email, otp);
+  // Dispatch email asynchronously so registration UI transitions instantly
+  sendVerificationEmail(createduser.email, otp).catch((err) =>
+    console.error("Async email dispatch error:", err)
+  );
 
   return res.status(200).json(
-    new apiresponse(200,createduser,"User registered successfully")
+    new apiresponse(200, createduser, "User registered successfully")
   )
 })
 
-const loginuser = asynchandler(async(req,res)=>{
-  const {username,email,password}= req.body
-  if(!(username || email)){
-    throw new apiError(400,"username or email is required")
+const loginuser = asynchandler(async (req, res) => {
+  const { username, email, password } = req.body
+  if (!(username || email)) {
+    throw new apiError(400, "username or email is required")
   }
   const user = await User.findOne({
-    $or:[{username},{email}]
+    $or: [{ username }, { email }]
   })
 
-  if(!user){
-    throw new apiError(404,"User does not exist")
+  if (!user) {
+    throw new apiError(404, "User does not exist")
   }
 
   const ispasswordvalid = await user.checkpassword(password)
-  if(!ispasswordvalid){
-    throw new apiError(401,"invalid user credentials")
+  if (!ispasswordvalid) {
+    throw new apiError(401, "invalid user credentials")
   }
 
-  const {Accesstokens,refreshtoken} = await generateAccessandRefreshtokens(user._id)
+  const { Accesstokens, refreshtoken } = await generateAccessandRefreshtokens(user._id)
   const loggedinuser = await User.findById(user._id).select("-password -refreshtoken")
 
   const options = {
-    httpOnly : true,
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
   }
 
   return res
     .status(200)
-    .cookie("accesstoken",Accesstokens,options)
-    .cookie("refreshtoken",refreshtoken,options)
+    .cookie("accesstoken", Accesstokens, options)
+    .cookie("refreshtoken", refreshtoken, options)
     .json(
       new apiresponse(
         200,
-        {user:loggedinuser,Accesstokens,refreshtoken},
+        { user: loggedinuser, Accesstokens, refreshtoken },
         "User logged in successfully"
       )
     )
 })
 
-const adminlogin = asynchandler(async(req,res)=>{
-  const {username,email,password}= req.body
-  if(!(username || email)){
-    throw new apiError(400,"username or email is required")
+const adminlogin = asynchandler(async (req, res) => {
+  const { username, email, password } = req.body
+  if (!(username || email)) {
+    throw new apiError(400, "username or email is required")
   }
 
   const user = await User.findOne({
-    $or:[{username},{email}]
+    $or: [{ username }, { email }]
   })
 
-  if(!user){
-    throw new apiError(404,"User does not exist")
+  if (!user) {
+    throw new apiError(404, "User does not exist")
   }
 
-  if(user.role !== "admin"){
-    throw new apiError(403,"Access denied. Admin privileges required")
+  if (user.role !== "admin") {
+    throw new apiError(403, "Access denied. Admin privileges required")
   }
 
   const ispasswordvalid = await user.checkpassword(password)
-  if(!ispasswordvalid){
-    throw new apiError(401,"invalid admin credentials")
+  if (!ispasswordvalid) {
+    throw new apiError(401, "invalid admin credentials")
   }
 
-  const {Accesstokens,refreshtoken} = await generateAccessandRefreshtokens(user._id)
+  const { Accesstokens, refreshtoken } = await generateAccessandRefreshtokens(user._id)
   const loggedinadmin = await User.findById(user._id).select("-password -refreshtoken")
 
   const options = {
-    httpOnly : true,
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
   }
 
   return res
     .status(200)
-    .cookie("accesstoken",Accesstokens,options)
-    .cookie("refreshtoken",refreshtoken,options)
+    .cookie("accesstoken", Accesstokens, options)
+    .cookie("refreshtoken", refreshtoken, options)
     .json(
       new apiresponse(
         200,
-        {user:loggedinadmin,Accesstokens,refreshtoken},
+        { user: loggedinadmin, Accesstokens, refreshtoken },
         "Admin logged in successfully"
       )
     )
 })
 
-const logoutuser = asynchandler(async(req,res)=>{
+const logoutuser = asynchandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set:{
-        refreshtoken:undefined
+      $set: {
+        refreshtoken: undefined
       }
     },
-    {returnDocument: 'after'}
+    { returnDocument: 'after' }
   )
   const options = {
-    httpOnly:true,
-    secure: process.env.NODE_ENV ==="production",
-    sameSite: process.env.NODE_ENV ==="production" ? "none":"lax"
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
   }
   return res
     .status(200)
-    .clearCookie("accesstoken",options)
-    .clearCookie("refreshtoken",options)
+    .clearCookie("accesstoken", options)
+    .clearCookie("refreshtoken", options)
     .json(
-      new apiresponse(200,{},"User logged out successfully")
+      new apiresponse(200, {}, "User logged out successfully")
     )
 })
 
-const changepassword = asynchandler(async(req,res)=>{
-  const {password,newpassword} = req.body
+const changepassword = asynchandler(async (req, res) => {
+  const { password, newpassword } = req.body
   const user = await User.findById(req.user._id)
   const validatepassword = await user.checkpassword(password)
-  if(!validatepassword){
-    throw new apiError(400,"old password is incorrect")
+  if (!validatepassword) {
+    throw new apiError(400, "old password is incorrect")
   }
-  user.password= newpassword
-  await user.save({validateBeforeSave:false})
+  user.password = newpassword
+  await user.save({ validateBeforeSave: false })
 
   return res
     .status(200)
     .json(
-      new apiresponse(200,{},"User password changed successfully")
+      new apiresponse(200, {}, "User password changed successfully")
     )
 })
 
-const addfriends = asynchandler(async(req,res)=>{
+const addfriends = asynchandler(async (req, res) => {
   const userid = req.user._id
   const { friendId, add } = req.body
   const targetFriendId = friendId || add
   if (!targetFriendId) {
     throw new apiError(400, "Friend ID is required")
   }
-  if(!mongoose.Types.ObjectId.isValid(targetFriendId)){
-    throw new apiError(400,"Invalid friend Id")
+  if (!mongoose.Types.ObjectId.isValid(targetFriendId)) {
+    throw new apiError(400, "Invalid friend Id")
   }
-  if(userid.toString()=== targetFriendId){
-    throw new apiError(400,"user cannot add itself to friend list")
+  if (userid.toString() === targetFriendId) {
+    throw new apiError(400, "user cannot add itself to friend list")
   }
   const currentuser = await User.findById(userid)
   const frienduser = await User.findById(targetFriendId)
-  if(!currentuser || !frienduser){
-    throw new apiError(404,"User not found")
+  if (!currentuser || !frienduser) {
+    throw new apiError(404, "User not found")
   }
-  if(currentuser.friends.some(id => id.toString() === targetFriendId)){
-    throw new apiError(400,"users are already friends")
+  if (currentuser.friends.some(id => id.toString() === targetFriendId)) {
+    throw new apiError(400, "users are already friends")
   }
   await currentuser.addfriends(frienduser._id)
   await frienduser.addfriends(currentuser._id)
 
-  await currentuser.save({validateBeforeSave:false})
-  await frienduser.save({validateBeforeSave:false})
+  await currentuser.save({ validateBeforeSave: false })
+  await frienduser.save({ validateBeforeSave: false })
 
   return res
     .status(200)
     .json(
-      new apiresponse(200,{},"friend added successfully")
+      new apiresponse(200, {}, "friend added successfully")
     )
 })
 
-const getcurrentuser = asynchandler(async(req,res)=>{
+const getcurrentuser = asynchandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new apiresponse(200,req.user,"current user fetched successfully")
+      new apiresponse(200, req.user, "current user fetched successfully")
     )
 })
 
-const getallusers = asynchandler(async(req,res)=>{
+const getallusers = asynchandler(async (req, res) => {
   const users = await User.find().select("-password -refreshtoken")
   return res
     .status(200)
     .json(
-      new apiresponse(200,users,"all users fetched successfully")
+      new apiresponse(200, users, "all users fetched successfully")
     )
 })
 
-const deleteuserbyid = asynchandler(async(req,res)=>{
-  const {userId} = req.params
-  if(!mongoose.Types.ObjectId.isValid(userId)){
-    throw new apiError(400,"Invalid user Id")
+const deleteuserbyid = asynchandler(async (req, res) => {
+  const { userId } = req.params
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new apiError(400, "Invalid user Id")
   }
   const user = await User.findByIdAndDelete(userId)
-  if(!user){
-    throw new apiError(404,"User not found")
+  if (!user) {
+    throw new apiError(404, "User not found")
   }
   return res
     .status(200)
     .json(
-      new apiresponse(200,{},"User deleted successfully")
+      new apiresponse(200, {}, "User deleted successfully")
     )
 })
 
-const updateuserrole = asynchandler(async(req,res)=>{
-  const {userId} = req.params
-  const {role} = req.body
-  if(!mongoose.Types.ObjectId.isValid(userId)){
-    throw new apiError(400,"Invalid user Id")
+const updateuserrole = asynchandler(async (req, res) => {
+  const { userId } = req.params
+  const { role } = req.body
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new apiError(400, "Invalid user Id")
   }
-  if(!["user","admin"].includes(role)){
-    throw new apiError(400,"Invalid role. Must be 'user' or 'admin'")
+  if (!["user", "admin"].includes(role)) {
+    throw new apiError(400, "Invalid role. Must be 'user' or 'admin'")
   }
   const user = await User.findByIdAndUpdate(
     userId,
-    {role},
-    {returnDocument: 'after'}
+    { role },
+    { returnDocument: 'after' }
   ).select("-password -refreshtoken")
 
-  if(!user){
-    throw new apiError(404,"User not found")
+  if (!user) {
+    throw new apiError(404, "User not found")
   }
   return res
     .status(200)
     .json(
-      new apiresponse(200,user,"User role updated successfully")
+      new apiresponse(200, user, "User role updated successfully")
     )
 })
 
-const updateuseravatar = asynchandler(async(req,res)=>{
+const updateuseravatar = asynchandler(async (req, res) => {
   const avatarlocalpath = req.file?.path || req.files?.avatar?.[0]?.path;
 
-  if(!avatarlocalpath){
+  if (!avatarlocalpath) {
     throw new apiError(400, "Avatar file is missing");
   }
 
   const avatar = await uploadoncloudinary(avatarlocalpath);
 
   const avatarUrl = avatar?.secure_url || avatar?.url;
-  if(!avatarUrl){
+  if (!avatarUrl) {
     throw new apiError(500, "Error uploading avatar to cloud storage");
   }
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set:{
+      $set: {
         avatar: avatarUrl
       }
     },
-    {returnDocument: 'after'}
+    { returnDocument: 'after' }
   ).select("-password -refreshtoken");
 
   return res
@@ -329,27 +332,27 @@ const updateuseravatar = asynchandler(async(req,res)=>{
     );
 });
 
-const updateusercoverimage = asynchandler(async(req,res)=>{
+const updateusercoverimage = asynchandler(async (req, res) => {
   const coverimagelocalpath = req.file?.path || req.files?.coverimage?.[0]?.path;
 
-  if(!coverimagelocalpath){
+  if (!coverimagelocalpath) {
     throw new apiError(400, "Cover image file is missing");
   }
 
   const coverimage = await uploadoncloudinary(coverimagelocalpath);
 
-  if(!coverimage){
+  if (!coverimage) {
     throw new apiError(500, "Error uploading cover image to cloud storage");
   }
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set:{
+      $set: {
         coverimage: coverimage.secure_url || coverimage.url
       }
     },
-    {returnDocument: 'after'}
+    { returnDocument: 'after' }
   ).select("-password -refreshtoken");
 
   return res
@@ -359,35 +362,35 @@ const updateusercoverimage = asynchandler(async(req,res)=>{
     );
 });
 
-const verifyEmail = asynchandler(async(req,res)=>{
+const verifyEmail = asynchandler(async (req, res) => {
   const { otp } = req.body;
-  if(!otp){
+  if (!otp) {
     throw new apiError(400, "OTP is required");
   }
 
   const user = await User.findById(req.user._id);
-  if(!user){
+  if (!user) {
     throw new apiError(404, "User not found");
   }
 
-  if(user.isverified){
+  if (user.isverified) {
     return res.status(200).json(
       new apiresponse(200, user, "User email is already verified")
     );
   }
 
-  if(!user.emailOtp || user.emailOtp !== otp.toString().trim()){
+  if (!user.emailOtp || user.emailOtp !== otp.toString().trim()) {
     throw new apiError(400, "Invalid OTP code");
   }
 
-  if(user.emailOtpExpiry && new Date(user.emailOtpExpiry) < new Date()){
+  if (user.emailOtpExpiry && new Date(user.emailOtpExpiry) < new Date()) {
     throw new apiError(400, "OTP code has expired. Please request a new code.");
   }
 
   user.isverified = true;
   user.emailOtp = undefined;
   user.emailOtpExpiry = undefined;
-  await user.save({validateBeforeSave: false});
+  await user.save({ validateBeforeSave: false });
 
   const updatedUser = await User.findById(user._id).select("-password -refreshtoken");
 
@@ -396,13 +399,13 @@ const verifyEmail = asynchandler(async(req,res)=>{
   );
 });
 
-const resendOtp = asynchandler(async(req,res)=>{
+const resendOtp = asynchandler(async (req, res) => {
   const user = await User.findById(req.user._id);
-  if(!user){
+  if (!user) {
     throw new apiError(404, "User not found");
   }
 
-  if(user.isverified){
+  if (user.isverified) {
     return res.status(200).json(
       new apiresponse(200, user, "User email is already verified")
     );
@@ -413,9 +416,11 @@ const resendOtp = asynchandler(async(req,res)=>{
 
   user.emailOtp = otp;
   user.emailOtpExpiry = emailOtpExpiry;
-  await user.save({validateBeforeSave: false});
+  await user.save({ validateBeforeSave: false });
 
-  await sendVerificationEmail(user.email, otp);
+  sendVerificationEmail(user.email, otp).catch((err) =>
+    console.error("Async email dispatch error:", err)
+  );
 
   return res.status(200).json(
     new apiresponse(200, {}, "Verification OTP sent successfully")
