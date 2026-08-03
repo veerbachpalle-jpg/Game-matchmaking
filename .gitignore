@@ -1,2 +1,7 @@
-backend/node_modules/
-backend/.env
+node_modules/
+**/node_modules/
+.env
+**/.env
+.output/
+dist/
+
