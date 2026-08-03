@@ -7,8 +7,13 @@ const sendVerificationEmail = async (email, otp) => {
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM || 'Nexus Arena <onboarding@resend.dev>',
+        let fromAddress = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+        if (fromAddress.includes('@gmail.com') || fromAddress.includes('@yahoo.com') || fromAddress.includes('@outlook.com')) {
+          fromAddress = 'onboarding@resend.dev';
+        }
+
+        const resendResult = await resend.emails.send({
+          from: fromAddress,
           to: email,
           subject: 'Nexus Arena — Email Verification OTP',
           html: `
@@ -22,8 +27,13 @@ const sendVerificationEmail = async (email, otp) => {
             </div>
           `
         });
-        console.log(`[RESEND API] Email successfully sent to ${email}`);
-        return true;
+
+        if (resendResult.error) {
+          console.log("[Resend API Error]:", resendResult.error);
+        } else {
+          console.log(`[RESEND API] Email successfully sent to ${email}`);
+          return true;
+        }
       } catch (resendError) {
         console.log("Resend API failed, trying SMTP fallback...", resendError.message || resendError);
       }
