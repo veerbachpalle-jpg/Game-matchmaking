@@ -6,12 +6,11 @@ import { gameManager } from '../Matchfunction/gameManager.js';
 import fs from 'fs';
 import path from 'path';
 
-const logFilePath = 'd:/game matchmaking system/backend/socket_debug.log';
 function logDebug(message) {
   const timestamp = new Date().toISOString();
-  const logMsg = `[${timestamp}] ${message}\n`;
-  fs.appendFileSync(logFilePath, logMsg);
+  console.log(`[SOCKET DEBUG ${timestamp}] ${message}`);
 }
+
 
 const useractiverooms = new Map();
 
