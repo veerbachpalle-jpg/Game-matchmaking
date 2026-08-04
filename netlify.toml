@@ -1,0 +1,9 @@
+[build]
+  base = "Frontend/nexus-quest-halls-4c76e7ad-main"
+  command = "npm run build"
+  publish = "Frontend/nexus-quest-halls-4c76e7ad-main/.output/public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
