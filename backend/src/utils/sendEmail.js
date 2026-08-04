@@ -3,7 +3,51 @@ import { Resend } from 'resend';
 
 const sendVerificationEmail = async (email, otp) => {
   try {
-    // 1. Try Resend API (HTTPS - bypasses SMTP port blocks on Render/AWS)
+    // 1. Try Brevo API (HTTPS - bypasses cloud SMTP port blocks on Render/AWS)
+    if (process.env.BREVO_API_KEY) {
+      try {
+        const senderEmail = (process.env.EMAIL_FROM || process.env.SMTP_USER || 'no-reply@nexusarena.com')
+          .replace(/^.*<|>.*$/g, '').trim();
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: {
+              name: 'Nexus Arena',
+              email: senderEmail
+            },
+            to: [{ email }],
+            subject: 'Nexus Arena — Email Verification OTP',
+            htmlContent: `
+              <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #0f172a; color: #ffffff; border-radius: 8px;">
+                <h2 style="color: #38bdf8;">Nexus Arena Operative Verification</h2>
+                <p>Your email verification OTP code is:</p>
+                <div style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #a855f7; margin: 20px 0;">
+                  ${otp}
+                </div>
+                <p style="color: #94a3b8; font-size: 12px;">This code will expire in 1 hour.</p>
+              </div>
+            `
+          })
+        });
+
+        if (response.ok) {
+          console.log(`[BREVO API] Email successfully sent to ${email}`);
+          return true;
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          console.log("[Brevo API Error]:", response.status, errData);
+        }
+      } catch (brevoError) {
+        console.log("Brevo API failed, trying fallbacks...", brevoError.message || brevoError);
+      }
+    }
+
+    // 2. Try Resend API (HTTPS)
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
