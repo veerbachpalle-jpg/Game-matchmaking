@@ -3,47 +3,53 @@ import { Resend } from 'resend';
 
 const sendVerificationEmail = async (email, otp) => {
   try {
-    // 1. Try Brevo API (HTTPS - bypasses cloud SMTP port blocks on Render/AWS)
-    if (process.env.BREVO_API_KEY) {
-      try {
-        const senderEmail = (process.env.EMAIL_FROM || process.env.SMTP_USER || 'no-reply@nexusarena.com')
-          .replace(/^.*<|>.*$/g, '').trim();
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'api-key': process.env.BREVO_API_KEY,
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify({
-            sender: {
-              name: 'Nexus Arena',
-              email: senderEmail
+    // 1. Try Brevo HTTPS API (v3)
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    if (brevoApiKey) {
+      if (brevoApiKey.startsWith('xsmtpsib-')) {
+        console.log("[BREVO NOTICE] 'BREVO_API_KEY' in your .env starts with 'xsmtpsib-', which is a Brevo SMTP key. For HTTPS API, generate a v3 API Key (starts with 'xkeysib-') in Brevo Dashboard -> SMTP & API -> API Keys.");
+      } else {
+        try {
+          const rawFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || 'no-reply@nexusarena.com';
+          const senderEmail = rawFrom.includes('<') ? rawFrom.match(/<([^>]+)>/)?.[1] || rawFrom : rawFrom;
+          
+          const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'api-key': brevoApiKey.trim(),
+              'content-type': 'application/json'
             },
-            to: [{ email }],
-            subject: 'Nexus Arena — Email Verification OTP',
-            htmlContent: `
-              <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #0f172a; color: #ffffff; border-radius: 8px;">
-                <h2 style="color: #38bdf8;">Nexus Arena Operative Verification</h2>
-                <p>Your email verification OTP code is:</p>
-                <div style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #a855f7; margin: 20px 0;">
-                  ${otp}
+            body: JSON.stringify({
+              sender: {
+                name: 'Nexus Arena',
+                email: senderEmail.trim()
+              },
+              to: [{ email }],
+              subject: 'Nexus Arena — Email Verification OTP',
+              htmlContent: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #0f172a; color: #ffffff; border-radius: 8px;">
+                  <h2 style="color: #38bdf8;">Nexus Arena Operative Verification</h2>
+                  <p>Your email verification OTP code is:</p>
+                  <div style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #a855f7; margin: 20px 0;">
+                    ${otp}
+                  </div>
+                  <p style="color: #94a3b8; font-size: 12px;">This code will expire in 1 hour.</p>
                 </div>
-                <p style="color: #94a3b8; font-size: 12px;">This code will expire in 1 hour.</p>
-              </div>
-            `
-          })
-        });
+              `
+            })
+          });
 
-        if (response.ok) {
-          console.log(`[BREVO API] Email successfully sent to ${email}`);
-          return true;
-        } else {
-          const errData = await response.json().catch(() => ({}));
-          console.log("[Brevo API Error]:", response.status, errData);
+          if (response.ok) {
+            console.log(`[BREVO API] Email successfully sent to ${email}`);
+            return true;
+          } else {
+            const errData = await response.json().catch(() => ({}));
+            console.error(`[BREVO API ERROR] Status ${response.status}:`, errData.message || JSON.stringify(errData));
+          }
+        } catch (brevoError) {
+          console.error("[BREVO API EXCEPTION]:", brevoError.message || brevoError);
         }
-      } catch (brevoError) {
-        console.log("Brevo API failed, trying fallbacks...", brevoError.message || brevoError);
       }
     }
 
@@ -73,17 +79,17 @@ const sendVerificationEmail = async (email, otp) => {
         });
 
         if (resendResult.error) {
-          console.log("[Resend API Error]:", resendResult.error);
+          console.error("[Resend API Error]:", resendResult.error);
         } else {
           console.log(`[RESEND API] Email successfully sent to ${email}`);
           return true;
         }
       } catch (resendError) {
-        console.log("Resend API failed, trying SMTP fallback...", resendError.message || resendError);
+        console.error("Resend API failed, trying SMTP fallback...", resendError.message || resendError);
       }
     }
 
-    // 2. Try Nodemailer SMTP
+    // 3. Try Nodemailer SMTP (Works with Brevo SMTP: host=smtp-relay.brevo.com, port=587 or 465)
     const host = process.env.SMTP_HOST;
     const port = process.env.SMTP_PORT;
     const user = process.env.SMTP_USER;
@@ -99,9 +105,9 @@ const sendVerificationEmail = async (email, otp) => {
           user,
           pass
         },
-        connectionTimeout: 4000,
-        greetingTimeout: 4000,
-        socketTimeout: 4000
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000
       });
 
       await transporter.sendMail({
@@ -126,8 +132,8 @@ const sendVerificationEmail = async (email, otp) => {
     console.log(`[EMAIL OTP SENDER] Verification OTP for ${email}: ${otp}`);
     return true;
   } catch (error) {
-    console.log("Email dispatch failed:", error.message || error);
-    console.log(`[EMAIL OTP FALLBACK] Verification OTP for ${email}: ${otp}`);
+    console.error("[EMAIL DISPATCH FAILED]:", error.message || error);
+    console.log(`[EMAIL OTP FALLBACK LOG] Verification OTP for ${email}: ${otp}`);
     return false;
   }
 };
