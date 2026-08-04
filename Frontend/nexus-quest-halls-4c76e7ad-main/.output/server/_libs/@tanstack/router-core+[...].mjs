@@ -1,4 +1,4 @@
-import { C as createInlineCssStyleAsset, F as decodePath, N as createLRUCache, P as invariant, S as createInlineCssPlaceholderAsset, T as getStylesheetHref, b as GLOBAL_TSR, j as rootRouteId, x as TSR_SCRIPT_BARRIER_ID } from "./react-router+[...].mjs";
+import { A as rootRouteId, M as createLRUCache, N as invariant, P as decodePath, S as createInlineCssStyleAsset, b as TSR_SCRIPT_BARRIER_ID, w as getStylesheetHref, x as createInlineCssPlaceholderAsset, y as GLOBAL_TSR } from "./react-router+[...].mjs";
 //#region node_modules/unenv/dist/runtime/polyfill/globalthis.mjs
 var globalthis_default = globalThis;
 //#endregion
@@ -1150,6 +1150,9 @@ function guardIndexedValue(ctx, id) {
 	});
 	if (ctx.refs.has(id)) throw new Error("Conflicted ref id: " + id);
 }
+function isThennable(value) {
+	return !!value && typeof value === "object" && "then" in value && typeof value.then === "function";
+}
 function assignIndexedValueVanilla(ctx, id, value) {
 	guardIndexedValue(ctx.base, id);
 	if (ctx.state.marked.has(id)) ctx.base.refs.set(id, value);
@@ -1312,6 +1315,7 @@ function deserializePromise(ctx, depth, node) {
 	const deferred = PROMISE_CONSTRUCTOR();
 	const result = assignIndexedValue$1(ctx, node.i, deferred.p);
 	const deserialized = deserialize$1(ctx, depth, node.f);
+	if (isThennable(deserialized)) throw new SerovalMalformedNodeError(node.f);
 	if (node.s) deferred.s(deserialized);
 	else deferred.f(deserialized);
 	return result;
@@ -1335,20 +1339,14 @@ function deserializePromiseConstructor(ctx, node) {
 	assignNodeType(ctx, node.s, 22);
 	return value;
 }
-function deserializePromiseResolve(ctx, depth, node) {
+function deserializePromiseFulfill(ctx, depth, node) {
 	const deferred = ctx.base.refs.get(node.i);
 	if (deferred) {
 		validateNodeType(ctx, node, node.i, 22);
-		deferred.s(deserialize$1(ctx, depth, node.a[1]));
-		return;
-	}
-	throw new SerovalMissingInstanceError("Promise");
-}
-function deserializePromiseReject(ctx, depth, node) {
-	const deferred = ctx.base.refs.get(node.i);
-	if (deferred) {
-		validateNodeType(ctx, node, node.i, 22);
-		deferred.f(deserialize$1(ctx, depth, node.a[1]));
+		const deserialized = deserialize$1(ctx, depth, node.a[1]);
+		if (isThennable(deserialized)) throw new SerovalMalformedNodeError(node.a[1]);
+		if (node.t === 23) deferred.s(deserialized);
+		else deferred.f(deserialized);
 		return;
 	}
 	throw new SerovalMissingInstanceError("Promise");
@@ -1437,8 +1435,8 @@ function deserialize$1(ctx, depth, node) {
 		case 21: return deserializeBoxed(ctx, depth, node);
 		case 25: return deserializePlugin(ctx, depth, node);
 		case 22: return deserializePromiseConstructor(ctx, node);
-		case 23: return deserializePromiseResolve(ctx, depth, node);
-		case 24: return deserializePromiseReject(ctx, depth, node);
+		case 23:
+		case 24: return deserializePromiseFulfill(ctx, depth, node);
 		case 28: return deserializeIteratorFactoryInstance(ctx, depth, node);
 		case 30: return deserializeAsyncIteratorFactoryInstance(ctx, depth, node);
 		case 31: return deserializeStreamConstructor(ctx, depth, node);

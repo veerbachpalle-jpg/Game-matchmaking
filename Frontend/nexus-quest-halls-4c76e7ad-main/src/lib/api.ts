@@ -1,4 +1,4 @@
-// Thin client for the Express backend (Game-matchmaking).
+// Thin client for the Express backend (Nexus Arena).
 // Base URL is configurable so the same build works against local + deployed API.
 export const API_BASE_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
@@ -77,11 +77,13 @@ export type ApiUser = {
   avatar?: string;
   coverimage?: string;
   rank?: string;
+  mmr?: number;
   role?: "user" | "admin";
-  status?: string;
   isverified?: boolean;
+  status?: "offline" | "online" | "Inqueue" | "in-game";
   friends?: string[];
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type MatchPlayer = {
@@ -92,29 +94,37 @@ export type MatchPlayer = {
   mmrAtMatch?: number;
 };
 
+export type Cell = "X" | "O" | null;
+
 export type GameState = {
   matchId: string;
-  board: (string | null)[];
+  board: Cell[];
   players: { X: string; O: string };
   currentTurn: string;
   status: "ongoing" | "completed" | "draw";
-  winner?: string | null;
+  winner: string | null;
 };
 
 export type Match = {
   matchId: string;
-  gameMode: string;
-  status: string;
+  gameMode: "1v1" | "four-player";
+  status: "grouped" | "ongoing" | "completed" | "cancelled";
   players: MatchPlayer[];
   gameState?: GameState | null;
-  result?: { winnerId?: string | null; scores?: Record<string, number>; mmrChanges?: Record<string, number> } | null;
+  result?: {
+    winnerId?: string | null;
+    scores?: Record<string, number>;
+    mmrChanges?: Record<string, number>;
+  } | null;
   createdAt: string;
 };
+
+export const isBot = (username: string) => username.startsWith("bot_");
 
 // ---- Endpoints ----
 export const api = {
   register: (form: FormData) =>
-    apiFetch<ApiUser>("/user/register", { method: "POST", formData: form }),
+    apiFetch<{ user?: ApiUser; Accesstokens?: string }>("/user/register", { method: "POST", formData: form }),
 
   login: (body: { username?: string; email?: string; password: string }) =>
     apiFetch<{ user: ApiUser; Accesstokens: string }>("/user/login", { method: "POST", body }),

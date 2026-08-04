@@ -23,8 +23,8 @@ function Core() {
     <group>
       <Icosahedron ref={mesh} args={[1.55, 1]}>
         <meshStandardMaterial
-          color="#0d2b38"
-          emissive="#22d3ee"
+          color="#1a1613"
+          emissive="#d8b45a"
           emissiveIntensity={0.35}
           metalness={1}
           roughness={0.18}
@@ -33,8 +33,8 @@ function Core() {
       </Icosahedron>
       <Icosahedron ref={inner} args={[1.05, 2]}>
         <meshStandardMaterial
-          color="#1c0d06"
-          emissive="#ff7a2f"
+          color="#120f0b"
+          emissive="#8a6a2c"
           emissiveIntensity={0.16}
           metalness={0.95}
           roughness={0.35}
@@ -56,13 +56,13 @@ function Rings() {
   return (
     <group ref={g}>
       <Torus args={[2.5, 0.012, 12, 128]}>
-        <meshBasicMaterial color="#22d3ee" transparent opacity={0.75} />
+        <meshBasicMaterial color="#d8b45a" transparent opacity={0.75} />
       </Torus>
       <Torus args={[3.1, 0.008, 12, 128]} rotation={[Math.PI / 2.6, 0, 0]}>
-        <meshBasicMaterial color="#e879f9" transparent opacity={0.55} />
+        <meshBasicMaterial color="#f0d78c" transparent opacity={0.55} />
       </Torus>
       <Torus args={[3.7, 0.006, 12, 128]} rotation={[0, Math.PI / 3, 0]}>
-        <meshBasicMaterial color="#ff7a2f" transparent opacity={0.45} />
+        <meshBasicMaterial color="#8a6a2c" transparent opacity={0.45} />
       </Torus>
     </group>
   );
@@ -89,7 +89,7 @@ function DustField() {
 
   return (
     <points ref={points} geometry={geometry}>
-      <pointsMaterial size={0.035} color="#7dd3fc" transparent opacity={0.7} sizeAttenuation />
+      <pointsMaterial size={0.035} color="#c9a84c" transparent opacity={0.7} sizeAttenuation />
     </points>
   );
 }
@@ -97,7 +97,7 @@ function DustField() {
 function Grid() {
   return (
     <gridHelper
-      args={[60, 60, "#22d3ee", "#123845"]}
+      args={[60, 60, "#d8b45a", "#241f16"]}
       position={[0, -3.2, 0]}
       material-transparent
       material-opacity={0.18}
@@ -122,13 +122,13 @@ export default function HeroScene() {
       camera={{ position: [0, 0.3, 7.2], fov: 42 }}
       gl={{ antialias: true, alpha: true }}
     >
-      <color attach="background" args={["#08111a"]} />
-      <fog attach="fog" args={["#08111a", 8, 20]} />
+      <color attach="background" args={["#0d0d0d"]} />
+      <fog attach="fog" args={["#0d0d0d", 8, 20]} />
       <ambientLight intensity={0.35} />
-      <pointLight position={[5, 4, 5]} intensity={70} color="#22d3ee" />
-      <pointLight position={[-6, -2, 2]} intensity={45} color="#ff7a2f" />
-      <spotLight position={[0, 8, 3]} angle={0.5} penumbra={1} intensity={60} color="#e879f9" />
-      <group position={[2.9, 0.1, 0]} scale={0.82}>
+      <pointLight position={[5, 4, 5]} intensity={70} color="#d8b45a" />
+      <pointLight position={[-6, -2, 2]} intensity={45} color="#8a6a2c" />
+      <spotLight position={[0, 8, 3]} angle={0.5} penumbra={1} intensity={60} color="#f0d78c" />
+      <group position={[2.2, 0.1, 0]} scale={0.74}>
         <Float speed={1.4} rotationIntensity={0.4} floatIntensity={0.7}>
           <Core />
         </Float>

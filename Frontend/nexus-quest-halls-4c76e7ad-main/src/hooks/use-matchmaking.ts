@@ -1,110 +1,67 @@
-import { useEffect, useRef, useState } from "react";
-import { io, type Socket } from "socket.io-client";
-git checkout main
-git pull origin mainimport { API_BASE_URL, getToken } from "@/lib/api";
-
+import { useCallback, useEffect, useState } from "react";
+import { useSocket, useSocketEvent } from "@/hooks/use-socket";
 
 export type QueueState = "idle" | "searching" | "matched" | "error";
 
+export type GameMode = "1v1" | "four-player";
+
 export type MatchFound = {
   matchId: string;
-  gameMode: string;
+  gameMode: GameMode;
   region: string;
   avgMmr?: number;
-  players: { userId: string; username: string; mmr: number; ping: number }[];
+  players: { userId: string; username: string; mmr: number; ping?: number }[];
+  gameState?: unknown | null;
 };
 
 export type QueueStatus = {
   playersInQueue: number;
   waitSeconds: number;
   botFillIn: number;
-  gamemode: string;
+  gamemode: GameMode;
   region: string;
 };
 
 export type QueueOptions = {
-  gamemode: "1v1" | "four-player";
+  gamemode: GameMode;
   region: string;
   ping: number;
 };
 
-// Connects to the Express Socket.IO gateway and drives the matchmaking queue.
-export function useMatchmaking(enabled: boolean) {
-  const socketRef = useRef<Socket | null>(null);
-  const [connected, setConnected] = useState(false);
+/**
+ * Drives the backend matchmaking queue over the shared Socket.IO gateway.
+ * Mirrors the server contract: join-queue / leave-queue -> queue-joined,
+ * queue-status (every 2s), match-found (1v1) and four-player-match.
+ */
+export function useMatchmaking() {
+  const { connected, ping, error, emit } = useSocket();
   const [state, setState] = useState<QueueState>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [status, setStatus] = useState<QueueStatus | null>(null);
   const [match, setMatch] = useState<MatchFound | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [ping, setPing] = useState<number | null>(null);
-  const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
 
-  useEffect(() => {
-    if (!enabled || typeof window === "undefined") return;
-
-    const socket = io(API_BASE_URL, {
-      withCredentials: true,
-      auth: { token: getToken() ?? undefined },
-      transports: ["websocket", "polling"],
-    });
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      setConnected(true);
-      setMessage(null);
-    });
-    socket.on("disconnect", () => {
-      setConnected(false);
-      setPing(null);
-      setQueueStatus(null);
-    });
-    socket.on("connect_error", (err) => {
-      setConnected(false);
-      setPing(null);
-      setMessage(err.message || "Cannot reach the matchmaking server");
-    });
-    socket.on("queue-joined", () => setState("searching"));
-    socket.on("queue left", () => { setState("idle"); setQueueStatus(null); });
-    socket.on("queue-status", (status: QueueStatus) => {
-      setQueueStatus(status);
-    });
-    socket.on("four-player-match", (payload: MatchFound) => {
-      setMatch(payload);
-      setState("matched");
-      setQueueStatus(null);
-    });
-    socket.on("match-found", (payload: MatchFound) => {
-      setMatch(payload);
-      setState("matched");
-      setQueueStatus(null);
-    });
-    socket.on("error", (payload: { message?: string }) => {
-      setState("error");
-      setMessage(payload?.message ?? "Matchmaking error");
-    });
-
-    return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!connected || !socketRef.current) return;
-
-    const measurePing = () => {
-      const start = Date.now();
-      socketRef.current?.emit("ping-check", start, (sentTime: number) => {
-        const latency = Math.max(1, Math.round(Date.now() - sentTime));
-        setPing(latency);
-      });
-    };
-
-    measurePing();
-    const interval = setInterval(measurePing, 3000);
-    return () => clearInterval(interval);
-  }, [connected]);
+  useSocketEvent("queue-joined", () => {
+    setState("searching");
+    setMessage(null);
+  });
+  useSocketEvent("queue-left", () => {
+    setState("idle");
+    setStatus(null);
+  });
+  useSocketEvent("queue-status", (payload: QueueStatus) => setStatus(payload));
+  useSocketEvent("match-found", (payload: MatchFound) => {
+    setMatch(payload);
+    setState("matched");
+  });
+  useSocketEvent("four-player-match", (payload: MatchFound) => {
+    setMatch(payload);
+    setState("matched");
+  });
+  useSocketEvent("error", (payload: { message?: string } | string) => {
+    setState("error");
+    setMessage(typeof payload === "string" ? payload : (payload?.message ?? "Matchmaking error"));
+  });
 
   useEffect(() => {
     if (state !== "searching") {
@@ -115,24 +72,32 @@ export function useMatchmaking(enabled: boolean) {
     return () => clearInterval(t);
   }, [state]);
 
-  const joinQueue = (opts: QueueOptions) => {
-    setMatch(null);
-    setMessage(null);
-    setQueueStatus(null);
-    setState("searching");
-    socketRef.current?.emit("join-queue", opts);
-  };
+  const joinQueue = useCallback(
+    (opts: Omit<QueueOptions, "ping"> & { ping?: number }) => {
+      setMatch(null);
+      setMessage(null);
+      setStatus(null);
+      setState("searching");
+      emit("join-queue", { ...opts, ping: opts.ping ?? ping ?? 40 });
+    },
+    [emit, ping],
+  );
 
-  const leaveQueue = () => {
+  const leaveQueue = useCallback(() => {
     setState("idle");
-    setQueueStatus(null);
-    socketRef.current?.emit("leave-queue", {});
-  };
+    setStatus(null);
+    emit("leave-queue");
+  }, [emit]);
 
-  const joinGameRoom = (roomId: string) => {
-    socketRef.current?.emit("join-game-room", { roomId });
+  return {
+    connected,
+    ping,
+    state,
+    message: message ?? error,
+    status,
+    match,
+    elapsed,
+    joinQueue,
+    leaveQueue,
   };
-
-  return { connected, state, message, match, elapsed, ping, queueStatus, joinQueue, leaveQueue, joinGameRoom };
 }
-

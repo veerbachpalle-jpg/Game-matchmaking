@@ -73,14 +73,30 @@ const registeruser = asynchandler(async (req, res) => {
     throw new apiError(500, "something went wrong while registering user")
   }
 
+  const { Accesstokens, refreshtoken } = await generateAccessandRefreshtokens(user._id);
+
   // Dispatch email asynchronously so registration UI transitions instantly
   sendVerificationEmail(createduser.email, otp).catch((err) =>
     console.error("Async email dispatch error:", err)
   );
 
-  return res.status(200).json(
-    new apiresponse(200, createduser, "User registered successfully")
-  )
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+  };
+
+  return res
+    .status(200)
+    .cookie("accesstoken", Accesstokens, options)
+    .cookie("refreshtoken", refreshtoken, options)
+    .json(
+      new apiresponse(
+        200,
+        { user: createduser, Accesstokens, refreshtoken },
+        "User registered successfully"
+      )
+    );
 })
 
 const loginuser = asynchandler(async (req, res) => {
