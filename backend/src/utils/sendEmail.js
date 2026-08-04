@@ -3,21 +3,66 @@ import { Resend } from 'resend';
 
 const sendVerificationEmail = async (email, otp) => {
   try {
-    // 1. Try Brevo HTTPS API (v3)
-    const brevoApiKey = process.env.BREVO_API_KEY;
+    // 1. Try Brevo API or Brevo SMTP Key
+    const brevoApiKey = process.env.BREVO_API_KEY || process.env.BREVO_KEY;
     if (brevoApiKey) {
-      if (brevoApiKey.startsWith('xsmtpsib-')) {
-        console.log("[BREVO NOTICE] 'BREVO_API_KEY' in your .env starts with 'xsmtpsib-', which is a Brevo SMTP key. For HTTPS API, generate a v3 API Key (starts with 'xkeysib-') in Brevo Dashboard -> SMTP & API -> API Keys.");
-      } else {
+      const trimmedKey = brevoApiKey.trim();
+      const rawFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || 'no-reply@nexusarena.com';
+      const senderEmail = rawFrom.includes('<') ? rawFrom.match(/<([^>]+)>/)?.[1] || rawFrom : rawFrom;
+
+      if (trimmedKey.startsWith('xsmtpsib-')) {
+        // Automatically route Brevo SMTP key via Nodemailer to smtp-relay.brevo.com
         try {
-          const rawFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || 'no-reply@nexusarena.com';
-          const senderEmail = rawFrom.includes('<') ? rawFrom.match(/<([^>]+)>/)?.[1] || rawFrom : rawFrom;
-          
+          const smtpUsers = [
+            process.env.SMTP_USER,
+            senderEmail.trim(),
+            'b41ca0001@smtp-brevo.com'
+          ].filter(Boolean);
+
+          for (const user of smtpUsers) {
+            try {
+              const transporter = nodemailer.createTransport({
+                host: 'smtp-relay.brevo.com',
+                port: 587,
+                secure: false,
+                auth: { user, pass: trimmedKey },
+                connectionTimeout: 10000,
+                greetingTimeout: 10000,
+                socketTimeout: 10000
+              });
+
+              await transporter.sendMail({
+                from: process.env.EMAIL_FROM || `"Nexus Arena" <${senderEmail.trim()}>`,
+                to: email,
+                subject: 'Nexus Arena — Email Verification OTP',
+                html: `
+                  <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #0f172a; color: #ffffff; border-radius: 8px;">
+                    <h2 style="color: #38bdf8;">Nexus Arena Operative Verification</h2>
+                    <p>Your email verification OTP code is:</p>
+                    <div style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #a855f7; margin: 20px 0;">
+                      ${otp}
+                    </div>
+                    <p style="color: #94a3b8; font-size: 12px;">This code will expire in 1 hour.</p>
+                  </div>
+                `
+              });
+              console.log(`[BREVO SMTP] Email successfully sent to ${email} (Auth user: ${user})`);
+              return true;
+            } catch (smtpErr) {
+              console.log(`[Brevo SMTP Login Attempt Failed for ${user}]:`, smtpErr.message || smtpErr);
+            }
+          }
+        } catch (err) {
+          console.error("[Brevo SMTP Error]:", err.message || err);
+        }
+      } else {
+        // Route v3 API Key via Brevo HTTPS API
+        try {
           const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
               'accept': 'application/json',
-              'api-key': brevoApiKey.trim(),
+              'api-key': trimmedKey,
               'content-type': 'application/json'
             },
             body: JSON.stringify({
