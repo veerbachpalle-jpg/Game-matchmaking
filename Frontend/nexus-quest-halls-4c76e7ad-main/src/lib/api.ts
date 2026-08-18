@@ -121,6 +121,15 @@ export type Match = {
 
 export const isBot = (username: string) => username.startsWith("bot_");
 
+export type SearchUserResult = {
+  _id: string;
+  username: string;
+  avatar?: string;
+  rank?: string;
+  mmr?: number;
+  status?: string;
+};
+
 // ---- Endpoints ----
 export const api = {
   register: (form: FormData) =>
@@ -144,6 +153,12 @@ export const api = {
 
   addFriend: (friendId: string) =>
     apiFetch("/user/add-friend", { method: "POST", body: { friendId } }),
+
+  addFriendByUsername: (username: string) =>
+    apiFetch("/user/add-friend", { method: "POST", body: { username } }),
+
+  searchUsers: (query: string) =>
+    apiFetch<SearchUserResult[]>(`/user/search-users?q=${encodeURIComponent(query)}`),
 
   updateAvatar: (form: FormData) =>
     apiFetch<ApiUser>("/user/avatar", { method: "PATCH", formData: form }),

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { ArenaShell, ActionButton, Alert, Field, Panel } from "@/components/arena-shell";
-import { api } from "@/lib/api";
+import { api, type SearchUserResult } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/profile")({
@@ -29,15 +29,62 @@ function ProfilePage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [newpassword, setNewPassword] = useState("");
-  const [friendId, setFriendId] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [otp, setOtp] = useState("");
 
+  // Friend search state
+  const [friendSearch, setFriendSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchUserResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [addingUserId, setAddingUserId] = useState<string | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
+
+  // Debounced search
+  const handleSearchChange = useCallback((value: string) => {
+    setFriendSearch(value);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    if (!value.trim()) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await api.searchUsers(value.trim());
+        setSearchResults(results);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 350);
+  }, []);
+
+  async function handleAddFriend(targetUser: SearchUserResult) {
+    setAddingUserId(targetUser._id);
+    setError(null);
+    setNotice(null);
+    try {
+      await api.addFriendByUsername(targetUser.username);
+      setNotice(`${targetUser.username} added to your squad!`);
+      // Remove from search results
+      setSearchResults((prev) => prev.filter((u) => u._id !== targetUser._id));
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add friend");
+    } finally {
+      setAddingUserId(null);
+    }
+  }
 
   if (!user) return <ArenaShell title="Loading profile…">{null}</ArenaShell>;
 
@@ -64,6 +111,13 @@ function ProfilePage() {
     form.append("coverimage", file);
     await run(() => api.updateCoverImage(form), "Cover image updated successfully");
   }
+
+  const statusColor = (s?: string) => {
+    if (s === "online") return "border-green-500/60 text-green-400";
+    if (s === "in-game") return "border-cyan-500/60 text-cyan-400";
+    if (s === "Inqueue") return "border-amber-500/60 text-amber-400";
+    return "border-border/60 text-muted-foreground";
+  };
 
   return (
     <ArenaShell eyebrow="Dossier" title={user.username} subtitle={user.email}>
@@ -144,21 +198,80 @@ function ProfilePage() {
             <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
               Squad · {user.friends?.length ?? 0}
             </span>
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 relative">
               <input
-                value={friendId}
-                onChange={(e) => setFriendId(e.target.value)}
-                placeholder="Friend user id"
-                className="flex-1 border border-input bg-background/60 px-4 py-2.5 text-sm outline-none focus:border-primary"
+                value={friendSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search players by username…"
+                className="w-full border border-input bg-background/60 px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
               />
-              <ActionButton
-                variant="ghost"
-                onClick={() => run(() => api.addFriend(friendId), "Friend added")}
-                disabled={!friendId}
-              >
-                Add
-              </ActionButton>
+              {searchLoading && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <span className="inline-block h-4 w-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+                </div>
+              )}
             </div>
+
+            {/* Search Results */}
+            {searchResults.length > 0 && (
+              <div className="mt-2 border border-border/60 bg-background/95 backdrop-blur-sm max-h-60 overflow-y-auto">
+                {searchResults.map((result) => {
+                  const isAlreadyFriend = user.friends?.includes(result._id);
+                  return (
+                    <div
+                      key={result._id}
+                      className="flex items-center gap-3 px-4 py-3 border-b border-border/30 last:border-b-0 hover:bg-primary/5 transition-colors"
+                    >
+                      {result.avatar ? (
+                        <img
+                          src={result.avatar}
+                          alt={result.username}
+                          className="h-8 w-8 object-cover border border-primary/30 flex-shrink-0"
+                        />
+                      ) : (
+                        <span className="grid h-8 w-8 place-items-center bg-primary/15 text-xs font-display text-primary border border-primary/30 flex-shrink-0">
+                          {result.username.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-display text-sm font-semibold tracking-wide text-foreground truncate">
+                          {result.username}
+                        </div>
+                        <div className="flex gap-2 mt-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+                          <span>{result.rank || "Unranked"}</span>
+                          <span>·</span>
+                          <span>{result.mmr ?? 1000} MMR</span>
+                          {result.status && (
+                            <>
+                              <span>·</span>
+                              <span className={statusColor(result.status)}>{result.status}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <ActionButton
+                        variant="ghost"
+                        onClick={() => handleAddFriend(result)}
+                        disabled={!!isAlreadyFriend || addingUserId === result._id}
+                      >
+                        {addingUserId === result._id
+                          ? "Adding…"
+                          : isAlreadyFriend
+                            ? "In Squad"
+                            : "Add"}
+                      </ActionButton>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* No results message */}
+            {friendSearch.trim() && !searchLoading && searchResults.length === 0 && (
+              <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground text-center py-2">
+                No players found matching "{friendSearch}"
+              </p>
+            )}
           </div>
         </Panel>
 

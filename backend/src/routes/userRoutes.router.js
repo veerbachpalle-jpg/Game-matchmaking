@@ -8,6 +8,7 @@ import {
   logoutuser,
   changepassword,
   addfriends,
+  searchUsers,
   getcurrentuser,
   getallusers,
   deleteuserbyid,
@@ -40,6 +41,7 @@ router.route("/logout").post(verifyJWT, logoutuser)
 router.route("/change-password").post(verifyJWT, changepassword)
 router.route("/me").get(verifyJWT, getcurrentuser)
 router.route("/add-friend").post(verifyJWT, addfriends)
+router.route("/search-users").get(verifyJWT, searchUsers)
 
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateuseravatar)
 router.route("/cover-image").patch(verifyJWT, upload.single("coverimage"), updateusercoverimage)

@@ -227,10 +227,20 @@ const changepassword = asynchandler(async (req, res) => {
 
 const addfriends = asynchandler(async (req, res) => {
   const userid = req.user._id
-  const { friendId, add } = req.body
-  const targetFriendId = friendId || add
+  const { friendId, add, username } = req.body
+  let targetFriendId = friendId || add
+
+  // Allow adding by username if no ID was given
+  if (!targetFriendId && username) {
+    const found = await User.findOne({ username: username.toLowerCase().trim() })
+    if (!found) {
+      throw new apiError(404, "No user found with that username")
+    }
+    targetFriendId = found._id.toString()
+  }
+
   if (!targetFriendId) {
-    throw new apiError(400, "Friend ID is required")
+    throw new apiError(400, "Friend ID or username is required")
   }
   if (!mongoose.Types.ObjectId.isValid(targetFriendId)) {
     throw new apiError(400, "Invalid friend Id")
@@ -255,8 +265,32 @@ const addfriends = asynchandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new apiresponse(200, {}, "friend added successfully")
+      new apiresponse(200, { friendUsername: frienduser.username }, "friend added successfully")
     )
+})
+
+const searchUsers = asynchandler(async (req, res) => {
+  const query = (req.query.q || "").trim()
+  if (!query || query.length < 1) {
+    return res.status(200).json(new apiresponse(200, [], "Provide a search term"))
+  }
+
+  const currentUserId = req.user._id
+
+  // Case-insensitive partial match on username, exclude self and bots
+  const users = await User.find({
+    $and: [
+      { username: { $regex: query, $options: "i" } },
+      { username: { $not: /^bot_/ } },
+    ],
+    _id: { $ne: currentUserId },
+  })
+    .select("username avatar rank mmr status")
+    .limit(10)
+
+  return res.status(200).json(
+    new apiresponse(200, users, "Search results")
+  )
 })
 
 const getcurrentuser = asynchandler(async (req, res) => {
@@ -450,6 +484,7 @@ export {
   logoutuser,
   changepassword,
   addfriends,
+  searchUsers,
   getcurrentuser,
   getallusers,
   deleteuserbyid,

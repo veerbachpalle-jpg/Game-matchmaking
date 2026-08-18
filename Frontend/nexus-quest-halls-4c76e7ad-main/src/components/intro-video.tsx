@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import introAsset from "@/assets/intro.mp4.asset.json";
+
+const INTRO_VIDEO_SRC = "/intro.mp4";
 
 export default function IntroVideo({ onDone }: { onDone: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,7 +33,7 @@ export default function IntroVideo({ onDone }: { onDone: () => void }) {
     >
       <video
         ref={videoRef}
-        src={introAsset.url}
+        src={INTRO_VIDEO_SRC}
         className="h-full w-full object-cover"
         autoPlay
         muted={muted}
