@@ -141,6 +141,26 @@ export const matchmaker = {
     tickets.sort((a, b) => a.joinedAt - b.joinedAt)
     const matchedUserIds = new Set();
 
+    // ── Force-match: if exactly 2 players in a 1v1 queue, match them instantly ──
+    if (gamemode === '1v1' && tickets.length === 2) {
+      const [playerA, playerB] = tickets;
+      console.log(
+        `[Force-match] Only 2 players in 1v1 queue (${region}), matching ${playerA.username} vs ${playerB.username} instantly`
+      );
+
+      const matchGroup = [playerA, playerB];
+
+      const multi = redis.multi();
+      matchGroup.forEach((player) => {
+        multi.zrem(queuekey, player.userId);
+        multi.del(`ticket:${player.userId}`);
+      });
+      await multi.exec();
+
+      await this.gamehandler(gamemode, region, matchGroup, io);
+      return; // queue fully consumed, nothing left to do
+    }
+
     for (let i = 0; i < tickets.length; i++) {
 
       const ticketA = tickets[i];
@@ -156,6 +176,12 @@ export const matchmaker = {
         100 + Math.floor(waitTimeSeconds / 5) * 50,
         1000
       );
+
+      // Ping tolerance grows with wait time so players aren't stuck forever.
+      // Starts at 80ms, grows by 20 every 5 seconds, removed entirely after 30s.
+      const allowedPingDelta = waitTimeSeconds >= 30
+        ? Infinity
+        : Math.min(80 + Math.floor(waitTimeSeconds / 5) * 20, 200);
 
       const candidates = [];
 
@@ -175,11 +201,11 @@ export const matchmaker = {
 
         if (mmrDelta <= allowedMmrDelta) {
 
-          // Check Ping
+          // Check Ping (now uses relaxing threshold)
           const pingDelta =
             Math.abs(ticketA.ping - ticketB.ping);
 
-          if (pingDelta <= 80) {
+          if (pingDelta <= allowedPingDelta) {
 
             candidates.push(ticketB);
 
