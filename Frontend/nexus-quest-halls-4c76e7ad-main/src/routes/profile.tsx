@@ -196,7 +196,7 @@ function ProfilePage() {
           </div>
           <div className="border-t border-border/60 px-6 py-5">
             <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-              Squad · {user.friends?.length ?? 0}
+              Friends List · {user.friends?.length ?? 0}
             </span>
             <div className="mt-4 relative">
               <input
@@ -417,7 +417,7 @@ function FriendsList({ userId }: { userId: string }) {
     <div className="mt-8 relative">
       <div className="absolute inset-0 bg-primary/5 blur-xl -z-10 rounded-3xl opacity-50" />
       <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-primary drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
-        Your Squad
+        Friends List
       </span>
       <ul className="mt-4 flex flex-col gap-2">
         {sorted.map((f) => (

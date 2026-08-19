@@ -19,23 +19,40 @@ const useractiverooms = new Map();
 const lobbyReadyState = new Map();
 
 // ── Group / Party system ──────────────────────────────────────────────
-// groupId -> { id, leaderId, members: [{ userId, username }], pending: Set<userId> }
+// groupId -> { id, leaderId, members: [{ userId, username }], pending: Set<userId>, teamCode: string }
 const groups = new Map();
+// teamCode -> groupId
+const teamCodeMap = new Map();
 // userId -> groupId (quick reverse lookup)
 const userGroupMap = new Map();
 
 let groupIdCounter = 1;
 
+function generateTeamCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code;
+  do {
+    code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+  } while (teamCodeMap.has(code));
+  return code;
+}
+
 function createGroup(userId, username) {
   const id = `grp_${Date.now()}_${groupIdCounter++}`;
+  const teamCode = generateTeamCode();
   const group = {
     id,
     leaderId: userId,
     members: [{ userId, username }],
     pending: new Set(),
+    teamCode,
   };
   groups.set(id, group);
   userGroupMap.set(userId, id);
+  teamCodeMap.set(teamCode, id);
   return group;
 }
 
@@ -45,6 +62,7 @@ function serializeGroup(group) {
     leaderId: group.leaderId,
     members: group.members,
     pending: Array.from(group.pending),
+    teamCode: group.teamCode,
   };
 }
 
@@ -59,6 +77,7 @@ function removeFromGroup(userId) {
   userGroupMap.delete(userId);
 
   if (group.members.length === 0) {
+    teamCodeMap.delete(group.teamCode);
     groups.delete(gid);
     return null;
   }
@@ -460,6 +479,10 @@ export const setupsockethandler = (io) => {
         return socket.emit('error', { message: 'Only the group leader can invite' });
       }
 
+      if (group.members.length >= 4) {
+        return socket.emit('error', { message: 'Group is full (max 4 players)' });
+      }
+
       // Already in group?
       if (group.members.some(m => m.userId === targetUserId)) {
         return socket.emit('error', { message: 'User is already in your group' });
@@ -490,6 +513,10 @@ export const setupsockethandler = (io) => {
 
       // Remove from pending
       group.pending.delete(userId);
+
+      if (group.members.length >= 4) {
+        return socket.emit('error', { message: 'Group is already full' });
+      }
 
       // Leave old group if any
       const oldGid = userGroupMap.get(userId);
@@ -530,6 +557,47 @@ export const setupsockethandler = (io) => {
         for (const m of remaining.members) {
           io.to(m.userId).emit('group-updated', serialized);
         }
+      }
+    });
+
+    socket.on('join-group-by-code', async (data) => {
+      const { teamCode } = data;
+      if (!teamCode) return;
+
+      const code = teamCode.toUpperCase();
+      const gid = teamCodeMap.get(code);
+      if (!gid) return socket.emit('error', { message: 'Invalid team code' });
+
+      const group = groups.get(gid);
+      if (!group) return socket.emit('error', { message: 'Group no longer exists' });
+
+      if (group.members.length >= 4) {
+        return socket.emit('error', { message: 'Group is already full' });
+      }
+
+      if (group.members.some(m => m.userId === userId)) {
+        return socket.emit('error', { message: 'You are already in this group' });
+      }
+
+      // Leave old group if any
+      const oldGid = userGroupMap.get(userId);
+      if (oldGid) {
+        const remaining = removeFromGroup(userId);
+        if (remaining) {
+          for (const m of remaining.members) {
+            io.to(m.userId).emit('group-updated', serializeGroup(remaining));
+          }
+        }
+      }
+
+      // Add to group
+      group.members.push({ userId, username });
+      userGroupMap.set(userId, gid);
+      group.pending.delete(userId); // Just in case they had a pending invite
+
+      const serialized = serializeGroup(group);
+      for (const m of group.members) {
+        io.to(m.userId).emit('group-updated', serialized);
       }
     });
 

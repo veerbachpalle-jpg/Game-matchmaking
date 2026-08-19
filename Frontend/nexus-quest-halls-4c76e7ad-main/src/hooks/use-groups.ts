@@ -11,6 +11,7 @@ export type GroupState = {
   leaderId: string;
   members: GroupMember[];
   pending: string[];
+  teamCode: string;
 } | null;
 
 export type GroupInvite = {
@@ -97,6 +98,13 @@ export function useGroups() {
     setGroup(null);
   }, [emit]);
 
+  const joinByCode = useCallback(
+    (teamCode: string) => {
+      emit("join-group-by-code", { teamCode });
+    },
+    [emit],
+  );
+
   const queueGroup = useCallback(
     (opts: { region: string; gamemode: string; ping?: number }) => {
       emit("group-queue", opts);
@@ -112,6 +120,7 @@ export function useGroups() {
     acceptInvite,
     declineInvite,
     leaveGroup,
+    joinByCode,
     queueGroup,
   };
 }

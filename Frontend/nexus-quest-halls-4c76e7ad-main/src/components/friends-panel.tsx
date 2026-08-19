@@ -33,11 +33,13 @@ export function FriendsPanel() {
     acceptInvite,
     declineInvite,
     leaveGroup,
+    joinByCode,
   } = useGroups();
 
   const [friends, setFriends] = useState<FriendData[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [joinCodeInput, setJoinCodeInput] = useState("");
 
   // ── Load friends from REST API ──────────────────────────────────
   const loadFriends = useCallback(async () => {
@@ -84,6 +86,14 @@ export function FriendsPanel() {
     inviteToGroup(friendId);
   }
 
+  function handleJoinCodeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (joinCodeInput.trim().length === 6) {
+      joinByCode(joinCodeInput.trim());
+      setJoinCodeInput("");
+    }
+  }
+
   // ── Sort: online/inqueue/ingame first, offline last ─────────────
   const sorted = [...friends].sort((a, b) => {
     const ao = STATUS_CFG[a.status]?.order ?? 3;
@@ -98,7 +108,7 @@ export function FriendsPanel() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-          Squad <span className="text-primary/70">· {onlineCount}/{friends.length} online</span>
+          Friends List <span className="text-primary/70">· {onlineCount}/{friends.length} online</span>
         </span>
         {connected && (
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
@@ -127,20 +137,46 @@ export function FriendsPanel() {
         </div>
       )}
 
+      {/* ── Join by Code ────────────────────────────────────────── */}
+      {!group && (
+        <form onSubmit={handleJoinCodeSubmit} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={joinCodeInput}
+            onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
+            placeholder="Enter Team Code..."
+            maxLength={6}
+            className="flex-1 rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground outline-none transition-colors focus:border-primary/50"
+          />
+          <button
+            type="submit"
+            disabled={joinCodeInput.trim().length !== 6}
+            className="rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-primary transition-all hover:bg-primary/20 disabled:opacity-30"
+          >
+            Join
+          </button>
+        </form>
+      )}
+
       {/* ── Active Group ────────────────────────────────────────── */}
       {group && (
         <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-primary/10 to-transparent p-4 shadow-[0_4px_20px_-5px_rgba(255,215,0,0.15)] backdrop-blur-md">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-50" />
           <div className="relative flex items-center justify-between">
             <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-primary drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
-              Active Party · {group.members.length} members
+              Active Party · {group.members.length}/4
             </span>
-            <button
-              onClick={leaveGroup}
-              className="font-mono text-[9px] uppercase tracking-[0.16em] text-destructive/80 hover:text-destructive hover:drop-shadow-[0_0_5px_rgba(255,0,0,0.5)] transition-all"
-            >
-              Leave
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[9px] tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded border border-primary/20" title="Team Code">
+                Code: {group.teamCode}
+              </span>
+              <button
+                onClick={leaveGroup}
+                className="font-mono text-[9px] uppercase tracking-[0.16em] text-destructive/80 hover:text-destructive hover:drop-shadow-[0_0_5px_rgba(255,0,0,0.5)] transition-all"
+              >
+                Leave
+              </button>
+            </div>
           </div>
           <ul className="relative mt-3 flex flex-col gap-2">
             {group.members.map((m) => (
