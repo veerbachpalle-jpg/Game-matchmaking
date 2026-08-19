@@ -36,6 +36,13 @@ type Lobby = {
   allReady: boolean;
 };
 
+type MatchMessage = {
+  userId: string;
+  username: string;
+  message: string;
+  timestamp: string;
+};
+
 function MatchRoom() {
   const { matchId } = Route.useParams();
   const { user, loading } = useAuth();
@@ -49,6 +56,10 @@ function MatchRoom() {
   const [winnerId, setWinnerId] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const [chatMessages, setChatMessages] = useState<MatchMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const chatScrollRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -103,6 +114,15 @@ function MatchRoom() {
     [matchId],
   );
 
+  useSocketEvent("match-message", (payload: MatchMessage) => {
+    setChatMessages((prev) => [...prev, payload]);
+    setTimeout(() => {
+      if (chatScrollRef.current) {
+        chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+      }
+    }, 50);
+  }, [matchId]);
+
   const isDuel = data?.gameMode === "1v1";
   const iAmReady = Boolean(user && lobby?.readyPlayers?.includes(user._id));
   const mySymbol = useMemo(() => {
@@ -128,6 +148,13 @@ function MatchRoom() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function handleSendChat(e: React.FormEvent) {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    emit("send-match-message", { matchId, message: chatInput });
+    setChatInput("");
   }
 
   return (
@@ -375,6 +402,58 @@ function MatchRoom() {
                 )}
               </Panel>
             )}
+
+            {/* ── Match Chat ────────────────────────────────────────────── */}
+            <Panel className="flex h-[400px] flex-col">
+              <span className="mb-4 font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                Match Chat
+              </span>
+              <div
+                ref={chatScrollRef}
+                className="flex-1 overflow-y-auto pr-2 flex flex-col gap-3 custom-scrollbar"
+              >
+                {chatMessages.length === 0 ? (
+                  <p className="mt-auto mb-auto text-center font-mono text-[10px] text-muted-foreground/50">
+                    No messages yet
+                  </p>
+                ) : (
+                  chatMessages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex flex-col ${
+                        msg.userId === user?._id ? "items-end" : "items-start"
+                      }`}
+                    >
+                      <span className="mb-1 font-mono text-[8px] uppercase tracking-widest text-muted-foreground/70">
+                        {msg.userId === user?._id ? "You" : msg.username}
+                      </span>
+                      <div
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          msg.userId === user?._id
+                            ? "bg-primary/20 text-primary-foreground border border-primary/30"
+                            : "bg-surface/60 text-foreground border border-white/5"
+                        }`}
+                      >
+                        {msg.message}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <form onSubmit={handleSendChat} className="mt-4 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Send a message..."
+                  className="flex-1 rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary/50"
+                  maxLength={200}
+                />
+                <ActionButton type="button" onClick={handleSendChat} disabled={!chatInput.trim() || !connected}>
+                  Send
+                </ActionButton>
+              </form>
+            </Panel>
 
             <div className="flex gap-5">
               <Link

@@ -46,7 +46,7 @@ function createGroup(userId, username) {
   const group = {
     id,
     leaderId: userId,
-    members: [{ userId, username }],
+    members: [{ userId, username, ready: true }],
     pending: new Set(),
     teamCode,
   };
@@ -90,6 +90,43 @@ function removeFromGroup(userId) {
   return group;
 }
 // ── end group helpers ─────────────────────────────────────────────────
+
+// ── Custom Rooms ──────────────────────────────────────────────────────
+const customRooms = new Map(); // roomId -> { roomId, hostId, players: [{ userId, username, team: 'A'|'B' }] }
+const userCustomRoomMap = new Map(); // userId -> roomId
+
+function createCustomRoomState(userId, username) {
+  const roomId = `cr_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const room = {
+    roomId,
+    hostId: userId,
+    players: [{ userId, username, team: 'A' }]
+  };
+  customRooms.set(roomId, room);
+  userCustomRoomMap.set(userId, roomId);
+  return room;
+}
+
+function removeUserFromCustomRoom(userId) {
+  const roomId = userCustomRoomMap.get(userId);
+  if (!roomId) return null;
+  const room = customRooms.get(roomId);
+  if (!room) { userCustomRoomMap.delete(userId); return null; }
+
+  room.players = room.players.filter(p => p.userId !== userId);
+  userCustomRoomMap.delete(userId);
+
+  if (room.players.length === 0) {
+    customRooms.delete(roomId);
+    return null;
+  }
+  
+  if (room.hostId === userId) {
+    room.hostId = room.players[0].userId;
+  }
+  return room;
+}
+// ── end custom rooms helpers ──────────────────────────────────────────
 
 function getLobbyState(matchId) {
   if (!lobbyReadyState.has(matchId)) {
@@ -287,6 +324,12 @@ export const setupsockethandler = (io) => {
         const group = groups.get(gid);
         if (!group) return socket.emit('error', { message: 'Group not found' });
         if (group.leaderId !== userId) return socket.emit('error', { message: 'Only the group leader can start the queue' });
+        
+        // Check if all members are ready (leader is implicitly ready)
+        const unreadyMembers = group.members.filter(m => m.userId !== group.leaderId && !m.ready);
+        if (unreadyMembers.length > 0) {
+          return socket.emit('error', { message: 'Cannot queue: Not all members are ready' });
+        }
 
         const { region, gamemode } = data;
         const ping = data.ping ?? 40;
@@ -442,6 +485,22 @@ export const setupsockethandler = (io) => {
       }
     });
 
+    // ── Live Match Chat ──────────────────────────────────────────────
+    socket.on('send-match-message', (data) => {
+      const { matchId, message } = data;
+      if (!matchId || !message || typeof message !== 'string') return;
+      if (!socket.rooms.has(matchId)) return; // Only allow sending to rooms you are in
+
+      const payload = {
+        userId,
+        username,
+        message: message.trim(),
+        timestamp: new Date().toISOString(),
+      };
+
+      io.to(matchId).emit('match-message', payload);
+    });
+
     // ── Group / Party events ─────────────────────────────────────────
     socket.on('create-group', () => {
       // Leave any existing group first
@@ -529,13 +588,13 @@ export const setupsockethandler = (io) => {
         }
       }
 
-      // Add to group
-      group.members.push({ userId, username });
+      group.pending.delete(userId);
+      group.members.push({ userId, username, ready: false });
       userGroupMap.set(userId, groupId);
 
-      const serialized = serializeGroup(group);
+      // Broadcast update
       for (const m of group.members) {
-        io.to(m.userId).emit('group-updated', serialized);
+        io.to(m.userId).emit('group-updated', serializeGroup(group));
       }
     });
 
@@ -591,13 +650,183 @@ export const setupsockethandler = (io) => {
       }
 
       // Add to group
-      group.members.push({ userId, username });
+      group.members.push({ userId, username, ready: false });
       userGroupMap.set(userId, gid);
       group.pending.delete(userId); // Just in case they had a pending invite
 
       const serialized = serializeGroup(group);
       for (const m of group.members) {
         io.to(m.userId).emit('group-updated', serialized);
+      }
+    });
+
+    socket.on('toggle-group-ready', () => {
+      const gid = userGroupMap.get(userId);
+      if (!gid) return;
+      const group = groups.get(gid);
+      if (!group) return;
+
+      const member = group.members.find(m => m.userId === userId);
+      if (member) {
+        member.ready = !member.ready;
+        for (const m of group.members) {
+          io.to(m.userId).emit('group-updated', serializeGroup(group));
+        }
+      }
+    });
+
+    // ── Custom Room Events ───────────────────────────────────────────
+    socket.on('create-custom-room', () => {
+      const existing = userCustomRoomMap.get(userId);
+      if (existing) {
+        const remaining = removeUserFromCustomRoom(userId);
+        if (remaining) {
+          for (const m of remaining.players) {
+            io.to(m.userId).emit('custom-room-updated', remaining);
+          }
+        }
+      }
+      const room = createCustomRoomState(userId, username);
+      socket.emit('custom-room-created', room);
+    });
+
+    socket.on('join-custom-room', (data) => {
+      const { roomId } = data;
+      if (!roomId) return;
+      
+      const room = customRooms.get(roomId);
+      if (!room) return socket.emit('error', { message: 'Custom room not found' });
+      if (room.players.length >= 8) return socket.emit('error', { message: 'Room is full' });
+      if (room.players.some(p => p.userId === userId)) return socket.emit('error', { message: 'Already in room' });
+
+      // Default to team A if space, else team B
+      const teamACount = room.players.filter(p => p.team === 'A').length;
+      const team = teamACount < 4 ? 'A' : 'B';
+      if (team === 'B' && room.players.length - teamACount >= 4) {
+         return socket.emit('error', { message: 'Room is full (teams balanced)' });
+      }
+
+      room.players.push({ userId, username, team });
+      userCustomRoomMap.set(userId, roomId);
+
+      for (const m of room.players) {
+        io.to(m.userId).emit('custom-room-updated', room);
+      }
+    });
+
+    socket.on('leave-custom-room', () => {
+      const remaining = removeUserFromCustomRoom(userId);
+      socket.emit('custom-room-left');
+      if (remaining) {
+        for (const m of remaining.players) {
+          io.to(m.userId).emit('custom-room-updated', remaining);
+        }
+      }
+    });
+
+    socket.on('swap-custom-team', () => {
+      const roomId = userCustomRoomMap.get(userId);
+      if (!roomId) return;
+      const room = customRooms.get(roomId);
+      if (!room) return;
+      const player = room.players.find(p => p.userId === userId);
+      if (!player) return;
+
+      const targetTeam = player.team === 'A' ? 'B' : 'A';
+      const targetTeamCount = room.players.filter(p => p.team === targetTeam).length;
+      if (targetTeamCount >= 4) {
+        return socket.emit('error', { message: `Team ${targetTeam} is full` });
+      }
+
+      player.team = targetTeam;
+      for (const m of room.players) {
+        io.to(m.userId).emit('custom-room-updated', room);
+      }
+    });
+
+    socket.on('invite-to-custom-room', (data) => {
+      const { targetUserId } = data;
+      const roomId = userCustomRoomMap.get(userId);
+      if (!roomId) return socket.emit('error', { message: 'You are not in a custom room' });
+      
+      const room = customRooms.get(roomId);
+      if (!room) return;
+      if (room.hostId !== userId) return socket.emit('error', { message: 'Only host can invite' });
+      if (room.players.length >= 8) return socket.emit('error', { message: 'Room is full' });
+
+      io.to(targetUserId).emit('custom-room-invite', {
+        roomId,
+        hostId: userId,
+        hostName: username,
+      });
+      socket.emit('invite-sent', { targetUserId, roomId });
+    });
+
+    socket.on('start-custom-match', async (data) => {
+      const { region = 'US East' } = data || {};
+      const roomId = userCustomRoomMap.get(userId);
+      if (!roomId) return socket.emit('error', { message: 'Not in a custom room' });
+      const room = customRooms.get(roomId);
+      if (!room) return;
+      if (room.hostId !== userId) return socket.emit('error', { message: 'Only host can start match' });
+
+      // Build Team A and Team B
+      const teamA = room.players.filter(p => p.team === 'A').map(p => ({ ...p, mmr: 1000, ping: 40 }));
+      const teamB = room.players.filter(p => p.team === 'B').map(p => ({ ...p, mmr: 1000, ping: 40 }));
+
+      // Fill with bots
+      while (teamA.length < 4) {
+        const botName = `bot_${Math.floor(Math.random() * 100000)}`;
+        const botDoc = await User.create({ username: botName, email: `${botName}@bot.local`, password: 'bot', mmr: 1000 });
+        teamA.push({ userId: String(botDoc._id), username: botName, team: 'A', mmr: 1000, ping: 20 });
+      }
+      while (teamB.length < 4) {
+        const botName = `bot_${Math.floor(Math.random() * 100000)}`;
+        const botDoc = await User.create({ username: botName, email: `${botName}@bot.local`, password: 'bot', mmr: 1000 });
+        teamB.push({ userId: String(botDoc._id), username: botName, team: 'B', mmr: 1000, ping: 20 });
+      }
+
+      const allPlayers = [...teamA, ...teamB];
+      const avgMmr = Math.round(allPlayers.reduce((s, p) => s + p.mmr, 0) / 8);
+      const teamAAvgMmr = Math.round(teamA.reduce((s, p) => s + p.mmr, 0) / 4);
+      const teamBAvgMmr = Math.round(teamB.reduce((s, p) => s + p.mmr, 0) / 4);
+
+      try {
+        const gamerecord = new Matchhistory({
+          players: allPlayers.map((p) => ({ user: p.userId, mmratmatch: p.mmr })),
+          gameMode: '4v4',
+          status: 'grouped',
+          teamA: teamA.map(p => p.userId),
+          teamB: teamB.map(p => p.userId),
+        });
+        await gamerecord.save();
+        const matchId = gamerecord._id.toString();
+
+        const matchPayload = {
+          matchId,
+          gameMode: '4v4',
+          region,
+          avgMmr,
+          teamA,
+          teamAAvgMmr,
+          teamB,
+          teamBAvgMmr,
+          players: allPlayers,
+        };
+
+        // Notify real players
+        for (const p of room.players) {
+          io.to(p.userId).emit('match-found', matchPayload);
+        }
+
+        // Cleanup custom room
+        for (const p of room.players) {
+          userCustomRoomMap.delete(p.userId);
+        }
+        customRooms.delete(roomId);
+      } catch (err) {
+        console.log('Error creating custom match:', err);
+        socket.emit('error', { message: 'Failed to start custom match' });
       }
     });
 

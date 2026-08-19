@@ -4,33 +4,32 @@ import { useSocket, useSocketEvent } from "@/hooks/use-socket";
 export type GroupMember = {
   userId: string;
   username: string;
+  ready?: boolean;
 };
 
 export type GroupState = {
   id: string;
   leaderId: string;
   members: GroupMember[];
-  pending: string[];
   teamCode: string;
 } | null;
 
 export type GroupInvite = {
   groupId: string;
-  fromUserId: string;
-  fromUsername: string;
-  members: GroupMember[];
+  inviterId: string;
+  inviterName: string;
 };
 
 /**
- * Manages group / party state over the shared Socket.IO gateway.
- *
- * Events handled:
+ * Hook for managing Group/Party state.
+ * Expected socket events:
  *   create-group -> group-created
- *   invite-to-group -> invite-sent / group-invite (on target)
+ *   invite-to-group -> group-invite (to target)
  *   accept-group-invite -> group-updated
  *   decline-group-invite -> invite-declined
  *   leave-group -> group-left / group-updated
  *   group-queue -> queue-joined (per member)
+ *   toggle-group-ready -> group-updated
  */
 export function useGroups() {
   const { emit } = useSocket();
@@ -95,22 +94,25 @@ export function useGroups() {
 
   const leaveGroup = useCallback(() => {
     emit("leave-group");
-    setGroup(null);
   }, [emit]);
+
+  const queueGroup = useCallback(
+    (options: { gamemode: string; region: string; ping: number }) => {
+      emit("group-queue", options);
+    },
+    [emit],
+  );
 
   const joinByCode = useCallback(
     (teamCode: string) => {
       emit("join-group-by-code", { teamCode });
     },
-    [emit],
+    [emit]
   );
 
-  const queueGroup = useCallback(
-    (opts: { region: string; gamemode: string; ping?: number }) => {
-      emit("group-queue", opts);
-    },
-    [emit],
-  );
+  const toggleReady = useCallback(() => {
+    emit("toggle-group-ready");
+  }, [emit]);
 
   return {
     group,
@@ -120,7 +122,8 @@ export function useGroups() {
     acceptInvite,
     declineInvite,
     leaveGroup,
-    joinByCode,
     queueGroup,
+    joinByCode,
+    toggleReady,
   };
 }

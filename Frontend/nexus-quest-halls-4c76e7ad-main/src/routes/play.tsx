@@ -27,7 +27,7 @@ export const Route = createFileRoute("/play")({
   }),
 });
 
-const REGIONS = [
+export const REGIONS = [
   { id: "mid-india", label: "Mid India" },
   { id: "south-india", label: "South India" },
   { id: "north-india", label: "North India" },
@@ -126,7 +126,11 @@ function PlayPage() {
   const [region, setRegion] = useState<string>(REGIONS[0].id);
 
   const mm = useMatchmaking();
-  const { group, queueGroup } = useGroups();
+  const { group, queueGroup, toggleReady } = useGroups();
+
+  const isLeader = group ? group.leaderId === user?._id : true;
+  const allMembersReady = group ? group.members.every(m => m.userId === group.leaderId || m.ready) : true;
+  const iAmReady = group ? group.members.find(m => m.userId === user?._id)?.ready : false;
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -250,12 +254,24 @@ function PlayPage() {
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               {!searching ? (
-                <ActionButton
-                  disabled={!mm.connected || Boolean(matched)}
-                  onClick={handleJoinQueue}
-                >
-                  {group && group.members.length > 1 ? "Queue group" : "Join queue"}
-                </ActionButton>
+                group && !isLeader ? (
+                  <ActionButton
+                    disabled={!mm.connected || Boolean(matched)}
+                    onClick={toggleReady}
+                    variant={iAmReady ? "ghost" : "primary"}
+                  >
+                    {iAmReady ? "Unready" : "Ready Up"}
+                  </ActionButton>
+                ) : (
+                  <ActionButton
+                    disabled={!mm.connected || Boolean(matched) || !allMembersReady}
+                    onClick={handleJoinQueue}
+                  >
+                    {group && group.members.length > 1 
+                      ? (!allMembersReady ? "Waiting for members..." : "Queue group")
+                      : "Join queue"}
+                  </ActionButton>
+                )
               ) : (
                 <ActionButton variant="ghost" onClick={mm.leaveQueue}>
                   Leave queue

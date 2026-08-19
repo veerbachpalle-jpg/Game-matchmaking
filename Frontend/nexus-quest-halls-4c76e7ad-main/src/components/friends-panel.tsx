@@ -168,7 +168,7 @@ export function FriendsPanel() {
             onClick={createGroup}
             className="w-full rounded-md border border-accent/40 bg-accent/10 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-accent transition-all hover:bg-accent/20 hover:shadow-[0_0_12px_rgba(var(--color-accent),0.15)]"
           >
-            Create Party
+            Create Teamcode
           </button>
         </div>
       )}
@@ -199,11 +199,15 @@ export function FriendsPanel() {
                 key={m.userId}
                 className="flex items-center gap-2.5 font-display text-xs tracking-wide text-foreground bg-black/20 rounded-lg px-3 py-2 border border-white/5"
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(255,215,0,0.8)]" />
+                <span className={`h-1.5 w-1.5 rounded-full ${m.userId === group.leaderId || m.ready ? 'bg-primary shadow-[0_0_8px_rgba(255,215,0,0.8)]' : 'bg-neutral-600'}`} />
                 {m.username}
-                {m.userId === group.leaderId && (
+                {m.userId === group.leaderId ? (
                   <span className="ml-auto font-mono text-[8px] uppercase tracking-[0.16em] text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full">
                     Leader
+                  </span>
+                ) : (
+                  <span className={`ml-auto font-mono text-[8px] uppercase tracking-[0.16em] px-2 py-0.5 rounded-full ${m.ready ? 'text-primary/80 bg-primary/10' : 'text-muted-foreground bg-white/5'}`}>
+                    {m.ready ? 'Ready' : 'Not Ready'}
                   </span>
                 )}
               </li>

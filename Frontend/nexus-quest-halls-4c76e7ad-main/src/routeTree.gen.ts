@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CustomRoomRouteImport } from './routes/custom-room'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as PlayRouteImport } from './routes/play'
@@ -27,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomRoomRoute = CustomRoomRouteImport.update({
+  id: '/custom-room',
+  path: '/custom-room',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -68,6 +74,7 @@ const MatchMatchIdRoute = MatchMatchIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/custom-room': typeof CustomRoomRoute
   '/login': typeof LoginRoute
   '/matches': typeof MatchesRoute
   '/play': typeof PlayRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/custom-room': typeof CustomRoomRoute
   '/login': typeof LoginRoute
   '/matches': typeof MatchesRoute
   '/play': typeof PlayRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/custom-room': typeof CustomRoomRoute
   '/login': typeof LoginRoute
   '/matches': typeof MatchesRoute
   '/play': typeof PlayRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/custom-room'
     | '/login'
     | '/matches'
     | '/play'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/custom-room'
     | '/login'
     | '/matches'
     | '/play'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/custom-room'
     | '/login'
     | '/matches'
     | '/play'
@@ -138,6 +150,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  CustomRoomRoute: typeof CustomRoomRoute
   LoginRoute: typeof LoginRoute
   MatchesRoute: typeof MatchesRoute
   PlayRoute: typeof PlayRoute
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom-room': {
+      id: '/custom-room'
+      path: '/custom-room'
+      fullPath: '/custom-room'
+      preLoaderRoute: typeof CustomRoomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -218,6 +238,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  CustomRoomRoute: CustomRoomRoute,
   LoginRoute: LoginRoute,
   MatchesRoute: MatchesRoute,
   PlayRoute: PlayRoute,
