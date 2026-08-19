@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -131,11 +132,24 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+  const isLandingPage = location.pathname === "/";
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SocketProvider>
+          {!isLandingPage && (
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="fixed inset-0 h-full w-full object-cover pointer-events-none -z-50 opacity-40 mix-blend-screen"
+            >
+              <source src="/Dragon.mp4" type="video/mp4" />
+            </video>
+          )}
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </SocketProvider>
