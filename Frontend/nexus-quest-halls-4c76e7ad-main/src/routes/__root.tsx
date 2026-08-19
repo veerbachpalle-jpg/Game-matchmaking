@@ -140,18 +140,22 @@ function RootComponent() {
       <AuthProvider>
         <SocketProvider>
           {!isLandingPage && (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="fixed inset-0 h-full w-full object-cover pointer-events-none -z-50 opacity-40 mix-blend-screen"
-            >
-              <source src="/Dragon.mp4" type="video/mp4" />
-            </video>
+            <div className="fixed inset-0 z-0 pointer-events-none">
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="h-full w-full object-cover opacity-20"
+              >
+                <source src="/Dragon.mp4" type="video/mp4" />
+              </video>
+            </div>
           )}
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
+          <div className="relative z-10">
+            <Outlet />
+          </div>
         </SocketProvider>
       </AuthProvider>
     </QueryClientProvider>
