@@ -52,7 +52,8 @@ const UserSchema = new Schema({
     }],
   status: {
       type:String,
-      default:"online"
+      enum:["offline","online","Inqueue","in-game"],
+      default:"offline"
   },
   isverified: {
     type: Boolean,

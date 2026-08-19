@@ -16,7 +16,9 @@ import {
   updateuseravatar,
   updateusercoverimage,
   verifyEmail,
-  resendOtp
+  resendOtp,
+  getFriends,
+  removeFriend
 } from "../controllers/usercontroller.js";
 
 const router = Router()
@@ -41,6 +43,8 @@ router.route("/logout").post(verifyJWT, logoutuser)
 router.route("/change-password").post(verifyJWT, changepassword)
 router.route("/me").get(verifyJWT, getcurrentuser)
 router.route("/add-friend").post(verifyJWT, addfriends)
+router.route("/remove-friend").post(verifyJWT, removeFriend)
+router.route("/friends").get(verifyJWT, getFriends)
 router.route("/search-users").get(verifyJWT, searchUsers)
 
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateuseravatar)

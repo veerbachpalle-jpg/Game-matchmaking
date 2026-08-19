@@ -3,7 +3,7 @@ import { useSocket, useSocketEvent } from "@/hooks/use-socket";
 
 export type QueueState = "idle" | "searching" | "matched" | "error";
 
-export type GameMode = "1v1" | "four-player";
+export type GameMode = "1v1" | "4v4";
 
 export type MatchFound = {
   matchId: string;
@@ -11,6 +11,10 @@ export type MatchFound = {
   region: string;
   avgMmr?: number;
   players: { userId: string; username: string; mmr: number; ping?: number }[];
+  teamA?: { userId: string; username: string; mmr: number; ping?: number }[];
+  teamB?: { userId: string; username: string; mmr: number; ping?: number }[];
+  teamAAvgMmr?: number;
+  teamBAvgMmr?: number;
   gameState?: unknown | null;
 };
 
@@ -51,10 +55,6 @@ export function useMatchmaking() {
   });
   useSocketEvent("queue-status", (payload: QueueStatus) => setStatus(payload));
   useSocketEvent("match-found", (payload: MatchFound) => {
-    setMatch(payload);
-    setState("matched");
-  });
-  useSocketEvent("four-player-match", (payload: MatchFound) => {
     setMatch(payload);
     setState("matched");
   });

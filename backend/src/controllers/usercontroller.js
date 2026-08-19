@@ -477,6 +477,62 @@ const resendOtp = asynchandler(async (req, res) => {
   );
 });
 
+const getFriends = asynchandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+    .populate('friends', 'username avatar rank mmr status')
+
+  if (!user) {
+    throw new apiError(404, "User not found")
+  }
+
+  const friends = (user.friends || []).map(f => ({
+    _id: f._id.toString(),
+    username: f.username,
+    avatar: f.avatar || "",
+    rank: f.rank || "Unranked",
+    mmr: f.mmr ?? 1000,
+    status: f.status || "offline",
+  }))
+
+  return res
+    .status(200)
+    .json(
+      new apiresponse(200, friends, "Friends fetched successfully")
+    )
+})
+
+const removeFriend = asynchandler(async (req, res) => {
+  const userId = req.user._id
+  const { friendId } = req.body
+
+  if (!friendId) {
+    throw new apiError(400, "Friend ID is required")
+  }
+  if (!mongoose.Types.ObjectId.isValid(friendId)) {
+    throw new apiError(400, "Invalid friend ID")
+  }
+
+  const currentUser = await User.findById(userId)
+  const friendUser = await User.findById(friendId)
+
+  if (!currentUser || !friendUser) {
+    throw new apiError(404, "User not found")
+  }
+
+  // Remove from both sides
+  currentUser.friends = currentUser.friends.filter(id => id.toString() !== friendId)
+  friendUser.friends = friendUser.friends.filter(id => id.toString() !== userId.toString())
+
+  await currentUser.save({ validateBeforeSave: false })
+  await friendUser.save({ validateBeforeSave: false })
+
+  return res
+    .status(200)
+    .json(
+      new apiresponse(200, {}, "Friend removed successfully")
+    )
+})
+
 export {
   registeruser,
   loginuser,
@@ -492,5 +548,7 @@ export {
   updateuseravatar,
   updateusercoverimage,
   verifyEmail,
-  resendOtp
+  resendOtp,
+  getFriends,
+  removeFriend
 }

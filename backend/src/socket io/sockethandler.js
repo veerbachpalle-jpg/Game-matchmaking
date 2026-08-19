@@ -18,6 +18,60 @@ const useractiverooms = new Map();
 // matchId -> { readyPlayers: Set<string>, expectedHumans: number, botPlayerIds: string[], initialized: boolean }
 const lobbyReadyState = new Map();
 
+// ── Group / Party system ──────────────────────────────────────────────
+// groupId -> { id, leaderId, members: [{ userId, username }], pending: Set<userId> }
+const groups = new Map();
+// userId -> groupId (quick reverse lookup)
+const userGroupMap = new Map();
+
+let groupIdCounter = 1;
+
+function createGroup(userId, username) {
+  const id = `grp_${Date.now()}_${groupIdCounter++}`;
+  const group = {
+    id,
+    leaderId: userId,
+    members: [{ userId, username }],
+    pending: new Set(),
+  };
+  groups.set(id, group);
+  userGroupMap.set(userId, id);
+  return group;
+}
+
+function serializeGroup(group) {
+  return {
+    id: group.id,
+    leaderId: group.leaderId,
+    members: group.members,
+    pending: Array.from(group.pending),
+  };
+}
+
+function removeFromGroup(userId) {
+  const gid = userGroupMap.get(userId);
+  if (!gid) return null;
+  const group = groups.get(gid);
+  if (!group) { userGroupMap.delete(userId); return null; }
+
+  group.members = group.members.filter(m => m.userId !== userId);
+  group.pending.delete(userId);
+  userGroupMap.delete(userId);
+
+  if (group.members.length === 0) {
+    groups.delete(gid);
+    return null;
+  }
+
+  // If leader left, promote next member
+  if (group.leaderId === userId) {
+    group.leaderId = group.members[0].userId;
+  }
+
+  return group;
+}
+// ── end group helpers ─────────────────────────────────────────────────
+
 function getLobbyState(matchId) {
   if (!lobbyReadyState.has(matchId)) {
     lobbyReadyState.set(matchId, {
@@ -38,6 +92,23 @@ function serializeLobby(state) {
     totalNeeded: needed,
     allReady: state.readyPlayers.size >= needed,
   };
+}
+
+/**
+ * Broadcast a status change to all of the user's friends so their
+ * friends-panel updates in real time.
+ */
+async function broadcastStatusToFriends(io, userId, newStatus) {
+  try {
+    const user = await User.findById(userId).select('friends username');
+    if (!user || !user.friends || user.friends.length === 0) return;
+    const payload = { userId, username: user.username, status: newStatus };
+    for (const friendId of user.friends) {
+      io.to(String(friendId)).emit('friend-status-change', payload);
+    }
+  } catch (err) {
+    console.log('broadcastStatusToFriends error:', err.message);
+  }
 }
 
 async function triggerBotMoveIfNeeded(io, matchId, nextTurnUserId) {
@@ -145,8 +216,10 @@ export const setupsockethandler = (io) => {
     logDebug(`Socket connected: ${username} (${userId}), socketId: ${socket.id}`);
     socket.join(userId);
 
+    // Set status to "online" and broadcast to friends
     try {
       await User.findByIdAndUpdate(userId, { status: 'online' });
+      broadcastStatusToFriends(io, userId, 'online');
     } catch (err) {
       console.log('Failed to update user status:', err);
     }
@@ -170,6 +243,7 @@ export const setupsockethandler = (io) => {
         console.log(`${username} joining ${gamemode} queue (MMR:${mmr} Ping:${safePing}ms)`);
         await matchmaker.addticket(userId, username, mmr, safePing, region, gamemode);
         socket.emit('queue-joined', { gamemode, region, ping });
+        broadcastStatusToFriends(io, userId, 'Inqueue');
       } catch (error) {
         console.log('join-queue error:', error);
         socket.emit('error', { message: 'failed to join matchmaking queue' });
@@ -180,8 +254,36 @@ export const setupsockethandler = (io) => {
       try {
         await matchmaker.removeticket(userId);
         socket.emit('queue-left');
+        broadcastStatusToFriends(io, userId, 'online');
       } catch (error) {
         console.log('leave-queue error:', error);
+      }
+    });
+
+    // ── Group Queue (leader queues entire group) ─────────────────────
+    socket.on('group-queue', async (data) => {
+      try {
+        const gid = userGroupMap.get(userId);
+        if (!gid) return socket.emit('error', { message: 'You are not in a group' });
+        const group = groups.get(gid);
+        if (!group) return socket.emit('error', { message: 'Group not found' });
+        if (group.leaderId !== userId) return socket.emit('error', { message: 'Only the group leader can start the queue' });
+
+        const { region, gamemode } = data;
+        const ping = data.ping ?? 40;
+
+        for (const member of group.members) {
+          const memberDoc = await User.findById(member.userId);
+          if (!memberDoc) continue;
+          const mmr = memberDoc.mmr || 1000;
+          const safePing = (ping !== undefined && !isNaN(ping)) ? Number(ping) : 40;
+          await matchmaker.addticket(member.userId, member.username, mmr, safePing, region, gamemode);
+          io.to(member.userId).emit('queue-joined', { gamemode, region, ping });
+          broadcastStatusToFriends(io, member.userId, 'Inqueue');
+        }
+      } catch (error) {
+        console.log('group-queue error:', error);
+        socket.emit('error', { message: 'Failed to queue group' });
       }
     });
 
@@ -193,6 +295,7 @@ export const setupsockethandler = (io) => {
       useractiverooms.set(userId, roomId);
 
       try { await User.findByIdAndUpdate(userId, { status: 'in-game' }); } catch (_) {}
+      broadcastStatusToFriends(io, userId, 'in-game');
 
       try {
         const lobby = getLobbyState(roomId);
@@ -320,12 +423,133 @@ export const setupsockethandler = (io) => {
       }
     });
 
+    // ── Group / Party events ─────────────────────────────────────────
+    socket.on('create-group', () => {
+      // Leave any existing group first
+      const existingGid = userGroupMap.get(userId);
+      if (existingGid) {
+        const remaining = removeFromGroup(userId);
+        if (remaining) {
+          for (const m of remaining.members) {
+            io.to(m.userId).emit('group-updated', serializeGroup(remaining));
+          }
+        }
+      }
+
+      const group = createGroup(userId, username);
+      socket.emit('group-created', serializeGroup(group));
+    });
+
+    socket.on('invite-to-group', async (data) => {
+      const { targetUserId } = data;
+      if (!targetUserId) return;
+
+      let gid = userGroupMap.get(userId);
+      // Auto-create a group if the user isn't in one yet
+      if (!gid) {
+        const group = createGroup(userId, username);
+        socket.emit('group-created', serializeGroup(group));
+        gid = group.id;
+      }
+
+      const group = groups.get(gid);
+      if (!group) return socket.emit('error', { message: 'Group not found' });
+
+      // Only leader can invite
+      if (group.leaderId !== userId) {
+        return socket.emit('error', { message: 'Only the group leader can invite' });
+      }
+
+      // Already in group?
+      if (group.members.some(m => m.userId === targetUserId)) {
+        return socket.emit('error', { message: 'User is already in your group' });
+      }
+
+      // Already invited?
+      if (group.pending.has(targetUserId)) {
+        return socket.emit('error', { message: 'Invite already sent' });
+      }
+
+      group.pending.add(targetUserId);
+
+      // Send invite to the target user
+      io.to(targetUserId).emit('group-invite', {
+        groupId: gid,
+        fromUserId: userId,
+        fromUsername: username,
+        members: group.members,
+      });
+
+      socket.emit('invite-sent', { targetUserId, groupId: gid });
+    });
+
+    socket.on('accept-group-invite', async (data) => {
+      const { groupId } = data;
+      const group = groups.get(groupId);
+      if (!group) return socket.emit('error', { message: 'Group no longer exists' });
+
+      // Remove from pending
+      group.pending.delete(userId);
+
+      // Leave old group if any
+      const oldGid = userGroupMap.get(userId);
+      if (oldGid && oldGid !== groupId) {
+        const remaining = removeFromGroup(userId);
+        if (remaining) {
+          for (const m of remaining.members) {
+            io.to(m.userId).emit('group-updated', serializeGroup(remaining));
+          }
+        }
+      }
+
+      // Add to group
+      group.members.push({ userId, username });
+      userGroupMap.set(userId, groupId);
+
+      const serialized = serializeGroup(group);
+      for (const m of group.members) {
+        io.to(m.userId).emit('group-updated', serialized);
+      }
+    });
+
+    socket.on('decline-group-invite', (data) => {
+      const { groupId } = data;
+      const group = groups.get(groupId);
+      if (!group) return;
+
+      group.pending.delete(userId);
+      io.to(group.leaderId).emit('invite-declined', { userId, username, groupId });
+    });
+
+    socket.on('leave-group', () => {
+      const remaining = removeFromGroup(userId);
+      socket.emit('group-left');
+
+      if (remaining) {
+        const serialized = serializeGroup(remaining);
+        for (const m of remaining.members) {
+          io.to(m.userId).emit('group-updated', serialized);
+        }
+      }
+    });
+
     // ── Disconnect ───────────────────────────────────────────────────
     socket.on('disconnect', async () => {
       console.log(`Socket disconnected: ${username}`);
       try {
         await matchmaker.removeticket(userId);
-        await User.findByIdAndUpdate(userId, { status: 'online' });
+        // FIX: set status to "offline" instead of "online"
+        await User.findByIdAndUpdate(userId, { status: 'offline' });
+        broadcastStatusToFriends(io, userId, 'offline');
+
+        // Clean up group membership
+        const remaining = removeFromGroup(userId);
+        if (remaining) {
+          const serialized = serializeGroup(remaining);
+          for (const m of remaining.members) {
+            io.to(m.userId).emit('group-updated', serialized);
+          }
+        }
       } catch (err) {
         console.log('disconnect cleanup error:', err);
       }

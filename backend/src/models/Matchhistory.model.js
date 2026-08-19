@@ -15,7 +15,7 @@ const MatchhistorySchema = new Schema({
   gameMode:{
     type:String,
     required:true,
-    enum:["1v1","four-player"]
+    enum:["1v1","four-player","4v4"]
   },
   status:{
     type:String,
@@ -31,10 +31,23 @@ const MatchhistorySchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User"
   },
+  // For 4v4 games: store team composition
+  teamA: [{
+    type: Schema.Types.ObjectId,
+    ref: "User"
+  }],
+  teamB: [{
+    type: Schema.Types.ObjectId,
+    ref: "User"
+  }],
   result:{
     winnerId:{
       type: Schema.Types.ObjectId,
       ref:"User"
+    },
+    winnerTeam: {
+      type: String,
+      enum: ["A", "B"]
     },
     scores:{
       type:Map,

@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArenaShell, ActionButton, Alert, Panel } from "@/components/arena-shell";
+import { FriendsPanel } from "@/components/friends-panel";
 import { useAuth } from "@/hooks/use-auth";
 import { useMatchmaking, type GameMode } from "@/hooks/use-matchmaking";
+import { useGroups } from "@/hooks/use-groups";
 
 export const Route = createFileRoute("/play")({
   component: PlayPage,
@@ -39,10 +41,10 @@ const MODES: { id: GameMode; label: string; copy: string; slots: string }[] = [
     slots: "2 operatives",
   },
   {
-    id: "four-player",
-    label: "Skirmish · 4P",
-    copy: "Four-operative lobby grouped by MMR and ping. Result certified by an operator.",
-    slots: "4 operatives",
+    id: "4v4",
+    label: "Warzone · 4v4",
+    copy: "Eight operatives split into two balanced teams by MMR. Group with friends or solo-queue.",
+    slots: "8 operatives",
   },
 ];
 
@@ -94,6 +96,29 @@ function RadarSweep({ active }: { active: boolean }) {
   );
 }
 
+/** Renders a player row in the team display */
+function PlayerRow({
+  username,
+  mmr,
+  isBot,
+}: {
+  username: string;
+  mmr: number;
+  isBot: boolean;
+}) {
+  return (
+    <li className="flex items-center justify-between border border-border/60 bg-surface/40 px-3 py-2">
+      <span className="font-display text-xs font-bold tracking-[0.16em] text-foreground">
+        {username}
+        {isBot && (
+          <span className="ml-2 font-mono text-[9px] tracking-[0.16em] text-accent">AI</span>
+        )}
+      </span>
+      <span className="font-mono text-[10px] text-muted-foreground">{mmr} mmr</span>
+    </li>
+  );
+}
+
 function PlayPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -101,6 +126,7 @@ function PlayPage() {
   const [region, setRegion] = useState<string>(REGIONS[0].id);
 
   const mm = useMatchmaking();
+  const { group, queueGroup } = useGroups();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -125,6 +151,16 @@ function PlayPage() {
 
   const searching = mm.state === "searching";
   const matched = mm.state === "matched" && mm.match;
+  const is4v4 = matched && mm.match?.gameMode === "4v4";
+
+  function handleJoinQueue() {
+    if (group && group.members.length > 1) {
+      // Queue the entire group
+      queueGroup({ gamemode: mode, region, ping: mm.ping ?? 40 });
+    } else {
+      mm.joinQueue({ gamemode: mode, region });
+    }
+  }
 
   return (
     <ArenaShell
@@ -133,101 +169,118 @@ function PlayPage() {
       subtitle="Tickets are grouped by MMR (±100, widening +50 every 5s) and ping (±80ms). After 60 seconds the server fills empty slots with bots."
     >
       <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
-        <Panel className="scanlines">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-              Gateway
-            </span>
-            <span className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.16em]">
-              <span className="text-muted-foreground">{mm.ping || "—"}ms</span>
-              <span className="flex items-center gap-2">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    mm.connected ? "bg-primary animate-pulse" : "bg-destructive"
-                  }`}
-                />
-                {mm.connected ? "Linked" : "Offline"}
+        {/* ── Left column: controls + friends ─────────────── */}
+        <div className="flex flex-col gap-6">
+          <Panel className="scanlines">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                Gateway
               </span>
-            </span>
-          </div>
+              <span className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.16em]">
+                <span className="text-muted-foreground">{mm.ping || "—"}ms</span>
+                <span className="flex items-center gap-2">
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      mm.connected ? "bg-primary animate-pulse" : "bg-destructive"
+                    }`}
+                  />
+                  {mm.connected ? "Linked" : "Offline"}
+                </span>
+              </span>
+            </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {MODES.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                disabled={searching}
-                onClick={() => setMode(m.id)}
-                className={`border p-5 text-left transition-colors disabled:opacity-60 ${
-                  mode === m.id
-                    ? "border-primary/70 bg-primary/10"
-                    : "border-border/60 bg-surface/40 hover:border-primary/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-sm font-bold tracking-[0.18em] text-foreground">
-                    {m.label}
-                  </span>
-                  <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">
-                    {m.slots}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{m.copy}</p>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-6">
-            <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-              Region
-            </span>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {REGIONS.map((r) => (
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {MODES.map((m) => (
                 <button
-                  key={r.id}
+                  key={m.id}
                   type="button"
                   disabled={searching}
-                  onClick={() => setRegion(r.id)}
-                  className={`border px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors disabled:opacity-60 ${
-                    region === r.id
-                      ? "border-accent/70 bg-accent/10 text-accent"
-                      : "border-border/60 text-muted-foreground hover:border-accent/40"
+                  onClick={() => setMode(m.id)}
+                  className={`border p-5 text-left transition-colors disabled:opacity-60 ${
+                    mode === m.id
+                      ? "border-primary/70 bg-primary/10"
+                      : "border-border/60 bg-surface/40 hover:border-primary/40"
                   }`}
                 >
-                  {r.label}
+                  <div className="flex items-center justify-between">
+                    <span className="font-display text-sm font-bold tracking-[0.18em] text-foreground">
+                      {m.label}
+                    </span>
+                    <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">
+                      {m.slots}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{m.copy}</p>
                 </button>
               ))}
             </div>
-          </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            {!searching ? (
-              <ActionButton
-                disabled={!mm.connected || Boolean(matched)}
-                onClick={() => mm.joinQueue({ gamemode: mode, region })}
-              >
-                Join queue
-              </ActionButton>
-            ) : (
-              <ActionButton variant="ghost" onClick={mm.leaveQueue}>
-                Leave queue
-              </ActionButton>
-            )}
-            <Link
-              to="/matches"
-              className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-primary"
-            >
-              View combat log →
-            </Link>
-          </div>
-
-          {mm.message && (
             <div className="mt-6">
-              <Alert>{mm.message}</Alert>
+              <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                Region
+              </span>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {REGIONS.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    disabled={searching}
+                    onClick={() => setRegion(r.id)}
+                    className={`border px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors disabled:opacity-60 ${
+                      region === r.id
+                        ? "border-accent/70 bg-accent/10 text-accent"
+                        : "border-border/60 text-muted-foreground hover:border-accent/40"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
-        </Panel>
 
+            {/* Group indicator */}
+            {group && group.members.length > 1 && (
+              <div className="mt-5 border border-primary/20 bg-primary/5 px-4 py-2.5 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
+                  Queuing as group · {group.members.length} members
+                </span>
+              </div>
+            )}
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              {!searching ? (
+                <ActionButton
+                  disabled={!mm.connected || Boolean(matched)}
+                  onClick={handleJoinQueue}
+                >
+                  {group && group.members.length > 1 ? "Queue group" : "Join queue"}
+                </ActionButton>
+              ) : (
+                <ActionButton variant="ghost" onClick={mm.leaveQueue}>
+                  Leave queue
+                </ActionButton>
+              )}
+              <Link
+                to="/matches"
+                className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-primary"
+              >
+                View combat log →
+              </Link>
+            </div>
+
+            {mm.message && (
+              <div className="mt-6">
+                <Alert>{mm.message}</Alert>
+              </div>
+            )}
+          </Panel>
+
+          {/* ── Friends Panel ────────────────────────────── */}
+          <FriendsPanel />
+        </div>
+
+        {/* ── Right column: radar + match info ───────────── */}
         <Panel className="flex flex-col">
           <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
             {matched ? "Lobby formed" : searching ? "Scanning network" : "Standby"}
@@ -242,24 +295,65 @@ function PlayPage() {
               <p className="text-center font-display text-2xl font-bold text-gradient">
                 Match found
               </p>
-              <ul className="mt-5 flex flex-col gap-2">
-                {mm.match!.players.map((p) => (
-                  <li
-                    key={p.userId}
-                    className="flex items-center justify-between border border-border/60 bg-surface/40 px-3 py-2"
-                  >
-                    <span className="font-display text-xs font-bold tracking-[0.16em] text-foreground">
-                      {p.username}
-                      {p.username.startsWith("bot_") && (
-                        <span className="ml-2 font-mono text-[9px] tracking-[0.16em] text-accent">
-                          AI
-                        </span>
-                      )}
-                    </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">{p.mmr} mmr</span>
-                  </li>
-                ))}
-              </ul>
+
+              {/* ── 4v4: show two teams ──────────────── */}
+              {is4v4 && mm.match!.teamA && mm.match!.teamB ? (
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-primary">
+                        Team Alpha
+                      </span>
+                      <span className="font-mono text-[9px] text-muted-foreground">
+                        avg {mm.match!.teamAAvgMmr} mmr
+                      </span>
+                    </div>
+                    <ul className="flex flex-col gap-1.5">
+                      {mm.match!.teamA!.map((p) => (
+                        <PlayerRow
+                          key={p.userId}
+                          username={p.username}
+                          mmr={p.mmr}
+                          isBot={p.username.startsWith("bot_")}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-accent">
+                        Team Bravo
+                      </span>
+                      <span className="font-mono text-[9px] text-muted-foreground">
+                        avg {mm.match!.teamBAvgMmr} mmr
+                      </span>
+                    </div>
+                    <ul className="flex flex-col gap-1.5">
+                      {mm.match!.teamB!.map((p) => (
+                        <PlayerRow
+                          key={p.userId}
+                          username={p.username}
+                          mmr={p.mmr}
+                          isBot={p.username.startsWith("bot_")}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                /* ── 1v1: flat player list ──────────────── */
+                <ul className="mt-5 flex flex-col gap-2">
+                  {mm.match!.players.map((p) => (
+                    <PlayerRow
+                      key={p.userId}
+                      username={p.username}
+                      mmr={p.mmr}
+                      isBot={p.username.startsWith("bot_")}
+                    />
+                  ))}
+                </ul>
+              )}
+
               <p className="mt-5 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
                 Entering match room…
               </p>

@@ -86,6 +86,15 @@ export type ApiUser = {
   updatedAt?: string;
 };
 
+export type FriendData = {
+  _id: string;
+  username: string;
+  avatar: string;
+  rank: string;
+  mmr: number;
+  status: "offline" | "online" | "Inqueue" | "in-game";
+};
+
 export type MatchPlayer = {
   userId: string;
   username: string;
@@ -107,12 +116,15 @@ export type GameState = {
 
 export type Match = {
   matchId: string;
-  gameMode: "1v1" | "four-player";
+  gameMode: "1v1" | "four-player" | "4v4";
   status: "grouped" | "ongoing" | "completed" | "cancelled";
   players: MatchPlayer[];
+  teamA?: MatchPlayer[] | null;
+  teamB?: MatchPlayer[] | null;
   gameState?: GameState | null;
   result?: {
     winnerId?: string | null;
+    winnerTeam?: "A" | "B";
     scores?: Record<string, number>;
     mmrChanges?: Record<string, number>;
   } | null;
@@ -159,6 +171,12 @@ export const api = {
 
   searchUsers: (query: string) =>
     apiFetch<SearchUserResult[]>(`/user/search-users?q=${encodeURIComponent(query)}`),
+
+  getFriends: () =>
+    apiFetch<FriendData[]>("/user/friends"),
+
+  removeFriend: (friendId: string) =>
+    apiFetch("/user/remove-friend", { method: "POST", body: { friendId } }),
 
   updateAvatar: (form: FormData) =>
     apiFetch<ApiUser>("/user/avatar", { method: "PATCH", formData: form }),

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { ArenaShell, ActionButton, Alert, Field, Panel } from "@/components/arena-shell";
-import { api, type SearchUserResult } from "@/lib/api";
+import { api, type SearchUserResult, type FriendData } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/profile")({
@@ -272,6 +272,9 @@ function ProfilePage() {
                 No players found matching "{friendSearch}"
               </p>
             )}
+
+            {/* Existing Friends List */}
+            <FriendsList userId={user._id} />
           </div>
         </Panel>
 
@@ -357,5 +360,109 @@ function ProfilePage() {
         </div>
       </div>
     </ArenaShell>
+  );
+}
+
+function FriendsList({ userId }: { userId: string }) {
+  const [friends, setFriends] = useState<FriendData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.getFriends()
+      .then(setFriends)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  async function handleRemove(friendId: string) {
+    setRemovingId(friendId);
+    try {
+      await api.removeFriend(friendId);
+      setFriends((prev) => prev.filter((f) => f._id !== friendId));
+    } catch { /* silent */ }
+    finally { setRemovingId(null); }
+  }
+
+  const statusDot = (s: string) => {
+    if (s === "online") return "bg-green-500";
+    if (s === "in-game") return "bg-cyan-500 animate-pulse";
+    if (s === "Inqueue") return "bg-amber-500 animate-pulse";
+    return "bg-neutral-600";
+  };
+  const statusLabel = (s: string) => {
+    if (s === "online") return "Online";
+    if (s === "in-game") return "In Game";
+    if (s === "Inqueue") return "In Queue";
+    return "Offline";
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-4 flex justify-center py-4">
+        <span className="inline-block h-5 w-5 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (friends.length === 0) return null;
+
+  // Sort online first
+  const sorted = [...friends].sort((a, b) => {
+    const order: Record<string, number> = { online: 0, Inqueue: 1, "in-game": 2, offline: 3 };
+    return (order[a.status] ?? 3) - (order[b.status] ?? 3);
+  });
+
+  return (
+    <div className="mt-5">
+      <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+        Your Squad
+      </span>
+      <ul className="mt-3 flex flex-col gap-1">
+        {sorted.map((f) => (
+          <li
+            key={f._id}
+            className="group/fr flex items-center gap-3 px-3 py-2 border border-transparent hover:border-border/40 hover:bg-surface/20 transition-colors"
+          >
+            {f.avatar ? (
+              <img
+                src={f.avatar}
+                alt={f.username}
+                className={`h-7 w-7 object-cover border flex-shrink-0 ${
+                  f.status === "offline" ? "border-border/40 opacity-50 grayscale" : "border-primary/30"
+                }`}
+                loading="lazy"
+              />
+            ) : (
+              <span className={`grid h-7 w-7 place-items-center text-[10px] font-display border flex-shrink-0 ${
+                f.status === "offline" ? "border-border/40 bg-neutral-800/50 text-muted-foreground" : "border-primary/30 bg-primary/15 text-primary"
+              }`}>
+                {f.username.slice(0, 2).toUpperCase()}
+              </span>
+            )}
+            <div className="flex-1 min-w-0">
+              <span className={`font-display text-xs font-semibold tracking-wide truncate block ${
+                f.status === "offline" ? "text-muted-foreground" : "text-foreground"
+              }`}>
+                {f.username}
+              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${statusDot(f.status)}`} />
+                <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {statusLabel(f.status)} · {f.rank} · {f.mmr} MMR
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => handleRemove(f._id)}
+              disabled={removingId === f._id}
+              className="opacity-0 group-hover/fr:opacity-100 border border-destructive/30 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-destructive/60 hover:bg-destructive/10 transition-all disabled:opacity-30"
+            >
+              {removingId === f._id ? "…" : "Remove"}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

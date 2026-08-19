@@ -14,7 +14,11 @@ async function getOrCreateBotUsers(count) {
   const botNames = [
     { username: "bot_viper", email: "bot_viper@arena.gg" },
     { username: "bot_ghost", email: "bot_ghost@arena.gg" },
-    { username: "bot_apex", email: "bot_apex@arena.gg" }
+    { username: "bot_apex", email: "bot_apex@arena.gg" },
+    { username: "bot_nova", email: "bot_nova@arena.gg" },
+    { username: "bot_phantom", email: "bot_phantom@arena.gg" },
+    { username: "bot_cipher", email: "bot_cipher@arena.gg" },
+    { username: "bot_reaper", email: "bot_reaper@arena.gg" },
   ];
 
   for (const b of botNames) {
@@ -39,7 +43,7 @@ async function getOrCreateBotUsers(count) {
 }
 
 const REGIONS = ['mid-india', 'south-india', 'north-india'];
-const GAMEMODES = ['1v1', 'four-player'];
+const GAMEMODES = ['1v1', '4v4'];
 
 export const matchmaker = {
   async addticket(
@@ -48,11 +52,13 @@ export const matchmaker = {
     mmr = 1000,
     ping = 40,
     region = "mid-india",
-    gamemode = "four-player"
+    gamemode = "4v4"
   ) {
     const userMmr = Number(mmr) || 1000;
     const userPing = Number(ping) || 40;
-    const queuekey = `queue:${gamemode}:${region}`
+    // Map legacy "four-player" to "4v4"
+    const normalizedMode = gamemode === 'four-player' ? '4v4' : gamemode;
+    const queuekey = `queue:${normalizedMode}:${region}`
     const ticketkey = `ticket:${userId}`
     const joinedAt = Date.now()
 
@@ -63,7 +69,7 @@ export const matchmaker = {
       ping: userPing.toString(),
       joinedAt: joinedAt.toString(),
       region,
-      gamemode,
+      gamemode: normalizedMode,
     });
 
     await redis.zadd(queuekey, userMmr, userId.toString())
@@ -185,8 +191,9 @@ export const matchmaker = {
 
       const candidates = [];
 
+      // 1v1 needs 1 candidate (total 2), 4v4 needs 7 candidates (total 8)
       const requiredCandidates =
-        gamemode === "1v1" ? 1 : 3;
+        gamemode === "1v1" ? 1 : 7;
 
       for (let j = i + 1; j < tickets.length; j++) {
 
@@ -335,20 +342,41 @@ export const matchmaker = {
         });
       });
 
-    } else if (gamemode === 'four-player') {
+    } else if (gamemode === '4v4') {
+      // 4v4: 8 players, split into 2 balanced teams of 4
       await User.updateMany(
-        {
-          _id: {
-            $in: playerdbids
-          }
-        },
-        {
-          status: "online"
+        { _id: { $in: playerdbids } },
+        { status: "in-game" }
+      );
+
+      // Sort players by MMR descending for balanced draft
+      const sorted = [...players].sort((a, b) => b.mmr - a.mmr);
+
+      // Snake draft for balanced teams: alternate picks
+      // 1→A, 2→B, 3→B, 4→A, 5→A, 6→B, 7→B, 8→A
+      const teamA = [];
+      const teamB = [];
+      sorted.forEach((player, i) => {
+        const round = Math.floor(i / 2);
+        if (round % 2 === 0) {
+          // Even rounds: first pick goes to A
+          if (i % 2 === 0) teamA.push(player);
+          else teamB.push(player);
+        } else {
+          // Odd rounds: first pick goes to B
+          if (i % 2 === 0) teamB.push(player);
+          else teamA.push(player);
         }
-      )
+      });
 
       const avgMmr = Math.round(
         players.reduce((sum, p) => sum + p.mmr, 0) / players.length
+      );
+      const teamAAvgMmr = Math.round(
+        teamA.reduce((sum, p) => sum + p.mmr, 0) / teamA.length
+      );
+      const teamBAvgMmr = Math.round(
+        teamB.reduce((sum, p) => sum + p.mmr, 0) / teamB.length
       );
 
       const gamerecord = new Matchhistory({
@@ -356,27 +384,47 @@ export const matchmaker = {
           user: player.userId,
           mmratmatch: player.mmr
         })),
-        gameMode: 'four-player',
-        status: 'completed'
+        gameMode: '4v4',
+        status: 'grouped',
+        teamA: teamA.map(p => p.userId),
+        teamB: teamB.map(p => p.userId),
       })
       await gamerecord.save();
 
+      const matchId = gamerecord._id.toString();
+
+      const matchPayload = {
+        matchId,
+        gameMode: '4v4',
+        region,
+        avgMmr,
+        teamA: teamA.map((p) => ({
+          userId: p.userId,
+          username: p.username,
+          mmr: p.mmr,
+          ping: p.ping,
+        })),
+        teamAAvgMmr,
+        teamB: teamB.map((p) => ({
+          userId: p.userId,
+          username: p.username,
+          mmr: p.mmr,
+          ping: p.ping,
+        })),
+        teamBAvgMmr,
+        players: players.map((p) => ({
+          userId: p.userId,
+          username: p.username,
+          mmr: p.mmr,
+          ping: p.ping,
+        })),
+      };
+
       players.forEach((player) => {
-        io.to(player.userId).emit("four-player-match", {
-          matchId: gamerecord._id.toString(),
-          gameMode: 'four-player',
-          region,
-          avgMmr,
-          players: players.map((p) => ({
-            userId: p.userId,
-            username: p.username,
-            mmr: p.mmr,
-            ping: p.ping,
-          })),
-        });
+        io.to(player.userId).emit("match-found", matchPayload);
       });
 
-      console.log(`Four-player match created: ${gamerecord._id} with players: ${players.map(p => p.username).join(', ')}`)
+      console.log(`4v4 match created: ${matchId} | Team A (avg ${teamAAvgMmr}): ${teamA.map(p => p.username).join(', ')} | Team B (avg ${teamBAvgMmr}): ${teamB.map(p => p.username).join(', ')}`);
     }
   },
 
@@ -410,6 +458,25 @@ export const matchmaker = {
       }
     }
 
+    // Build team arrays for 4v4 matches
+    let teamAData = null;
+    let teamBData = null;
+    if (match.gameMode === '4v4' && match.teamA && match.teamB) {
+      const allPlayerMap = {};
+      match.players.forEach(p => {
+        const uid = p.user?._id?.toString() || p.user?.toString();
+        allPlayerMap[uid] = {
+          userId: uid,
+          username: p.user?.username || "Operative",
+          avatar: p.user?.avatar || "",
+          rank: p.user?.rank || "Unranked",
+          mmrAtMatch: p.mmratmatch,
+        };
+      });
+      teamAData = match.teamA.map(id => allPlayerMap[id.toString()] || { userId: id.toString() });
+      teamBData = match.teamB.map(id => allPlayerMap[id.toString()] || { userId: id.toString() });
+    }
+
     return res.status(200).json({
       success: true,
       data: {
@@ -423,6 +490,8 @@ export const matchmaker = {
           rank: p.user?.rank || "Unranked",
           mmrAtMatch: p.mmratmatch,
         })),
+        teamA: teamAData,
+        teamB: teamBData,
         gameState: activeGame || null,
         result: match.result || null,
         createdAt: match.createdAt,
