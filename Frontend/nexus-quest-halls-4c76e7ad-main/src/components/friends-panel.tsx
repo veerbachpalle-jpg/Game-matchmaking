@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { api, type FriendData } from "@/lib/api";
 import { useSocket, useSocketEvent } from "@/hooks/use-socket";
-import { useGroups, type GroupInvite } from "@/hooks/use-groups";
+import { useGroups } from "@/hooks/use-groups";
 import { useAuth } from "@/hooks/use-auth";
 import { ActionButton, Panel } from "@/components/arena-shell";
 
@@ -34,6 +35,7 @@ export function FriendsPanel() {
     declineInvite,
     leaveGroup,
     joinByCode,
+    toggleReady,
   } = useGroups();
 
   const [friends, setFriends] = useState<FriendData[]>([]);
@@ -170,6 +172,13 @@ export function FriendsPanel() {
           >
             Create Teamcode
           </button>
+
+          <Link
+            to="/custom-room"
+            className="mt-3 block text-center w-full rounded-md border border-primary/40 bg-primary/10 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]"
+          >
+            Create Custom Lobby
+          </Link>
         </div>
       )}
 
@@ -185,6 +194,14 @@ export function FriendsPanel() {
               <span className="font-mono text-[9px] tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded border border-primary/20" title="Team Code">
                 Code: {group.teamCode}
               </span>
+              {group.leaderId !== user?._id && (
+                <button
+                  onClick={toggleReady}
+                  className="font-mono text-[9px] uppercase tracking-[0.16em] text-accent hover:text-accent/80 transition-all"
+                >
+                  {group.members.find(m => m.userId === user?._id)?.ready ? 'Unready' : 'Ready Up'}
+                </button>
+              )}
               <button
                 onClick={leaveGroup}
                 className="font-mono text-[9px] uppercase tracking-[0.16em] text-destructive/80 hover:text-destructive hover:drop-shadow-[0_0_5px_rgba(255,0,0,0.5)] transition-all"
