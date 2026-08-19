@@ -301,7 +301,12 @@ function MatchRoom() {
                   );
                 };
 
-                if (data.gameMode === "4v4" && data.teamA && data.teamB) {
+                const is4v4Mode = data.gameMode === "4v4" || data.gameMode === "four-player";
+                const hasTeams = data.teamA && data.teamA.length > 0 && data.teamB && data.teamB.length > 0;
+
+                if (is4v4Mode) {
+                  const tA = hasTeams ? data.teamA! : data.players.slice(0, Math.ceil(data.players.length / 2));
+                  const tB = hasTeams ? data.teamB! : data.players.slice(Math.ceil(data.players.length / 2));
                   return (
                     <div className="mt-5 grid gap-6 sm:grid-cols-2">
                       <div>
@@ -309,7 +314,7 @@ function MatchRoom() {
                           Team Alpha
                         </span>
                         <ul className="flex flex-col gap-3">
-                          {data.teamA.map(renderPlayer)}
+                          {tA.map(renderPlayer)}
                         </ul>
                       </div>
                       <div>
@@ -317,7 +322,7 @@ function MatchRoom() {
                           Team Bravo
                         </span>
                         <ul className="flex flex-col gap-3">
-                          {data.teamB.map(renderPlayer)}
+                          {tB.map(renderPlayer)}
                         </ul>
                       </div>
                     </div>
