@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NEXUS ARENA — Competitive Game Matchmaking" },
+      { title: "MATCHFORGE — Competitive Game Matchmaking" },
       {
         name: "description",
         content: "Skill-based matchmaking and instant browser play across every arena.",
       },
-      { name: "author", content: "Nexus Arena" },
-      { property: "og:title", content: "NEXUS ARENA — Competitive Game Matchmaking" },
+      { name: "author", content: "MatchForge" },
+      { property: "og:title", content: "MATCHFORGE — Competitive Game Matchmaking" },
       {
         property: "og:description",
         content: "Skill-based matchmaking and instant browser play across every arena.",

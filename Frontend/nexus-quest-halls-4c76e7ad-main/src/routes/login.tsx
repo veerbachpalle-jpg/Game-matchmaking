@@ -7,12 +7,12 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
   head: () => ({
     meta: [
-      { title: "Log In — Nexus Arena Matchmaking" },
+      { title: "Log In — MatchForge" },
       {
         name: "description",
-        content: "Sign in to Nexus Arena to enter the competitive queue and track your match history.",
+        content: "Sign in to MatchForge to enter the competitive queue and track your match history.",
       },
-      { property: "og:title", content: "Log In — Nexus Arena Matchmaking" },
+      { property: "og:title", content: "Log In — MatchForge" },
       {
         property: "og:description",
         content: "Sign in to enter the competitive queue and track your match history.",

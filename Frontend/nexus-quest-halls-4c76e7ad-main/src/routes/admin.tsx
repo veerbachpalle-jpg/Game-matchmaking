@@ -9,12 +9,12 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
   head: () => ({
     meta: [
-      { title: "Operator Console — Nexus Arena" },
+      { title: "Operator Console — MatchForge" },
       {
         name: "description",
-        content: "Admin console for Nexus Arena: manage registered operatives, roles and account removals.",
+        content: "Admin console for MatchForge: manage registered operatives, roles and account removals.",
       },
-      { property: "og:title", content: "Operator Console — Nexus Arena" },
+      { property: "og:title", content: "Operator Console — MatchForge" },
       {
         property: "og:description",
         content: "Manage registered operatives, roles and account removals.",

@@ -10,12 +10,12 @@ export const Route = createFileRoute("/matches")({
   component: MatchesPage,
   head: () => ({
     meta: [
-      { title: "Match History — Nexus Arena" },
+      { title: "Match History — MatchForge" },
       {
         name: "description",
-        content: "Review your recent four-player Nexus Arena matches, lobby rosters, MMR snapshots and results.",
+        content: "Review your recent four-player MatchForge matches, lobby rosters, MMR snapshots and results.",
       },
-      { property: "og:title", content: "Match History — Nexus Arena" },
+      { property: "og:title", content: "Match History — MatchForge" },
       {
         property: "og:description",
         content: "Review your recent matches, rosters, MMR snapshots and results.",

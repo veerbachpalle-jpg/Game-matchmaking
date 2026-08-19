@@ -42,12 +42,12 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
   head: () => ({
     meta: [
-      { title: "Create Profile — Nexus Arena" },
+      { title: "Create Profile — MatchForge" },
       {
         name: "description",
-        content: "Create your Nexus Arena profile, upload your avatar, and start climbing the competitive ladder.",
+        content: "Create your MatchForge profile, upload your avatar, and start climbing the competitive ladder.",
       },
-      { property: "og:title", content: "Create Profile — Nexus Arena" },
+      { property: "og:title", content: "Create Profile — MatchForge" },
       {
         property: "og:description",
         content: "Create your profile and start climbing the competitive ladder.",

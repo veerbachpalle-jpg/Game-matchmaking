@@ -20,7 +20,7 @@ export function ArenaNav() {
             <span className="h-1.5 w-1.5 rotate-45 bg-primary" />
           </span>
           <span className="font-display text-sm font-bold tracking-[0.22em] text-foreground">
-            NEXUS<span className="text-primary">.</span>
+            MATCH<span className="text-primary">FORGE</span>
           </span>
         </Link>
 

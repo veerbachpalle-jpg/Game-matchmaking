@@ -49,7 +49,7 @@ export default function IntroVideo({ onDone }: { onDone: () => void }) {
       <div className="absolute left-6 top-6 flex items-center gap-3">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
         <span className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-          Nexus Arena · Booting
+          MatchForge · Igniting
         </span>
       </div>
 

@@ -9,13 +9,13 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "NEXUS ARENA — Competitive Matchmaking & Instant Play" },
+      { title: "MATCHFORGE — Competitive Matchmaking & Instant Play" },
       {
         name: "description",
         content:
           "Skill-based matchmaking in under 8 seconds. Queue, drop into the arena, and climb the global ladder across every title you play.",
       },
-      { property: "og:title", content: "NEXUS ARENA — Competitive Matchmaking & Instant Play" },
+      { property: "og:title", content: "MATCHFORGE — Competitive Matchmaking & Instant Play" },
       {
         property: "og:description",
         content:
@@ -73,7 +73,7 @@ function Mark() {
         <span className="h-1.5 w-1.5 rotate-45 bg-primary" />
       </span>
       <span className="font-display text-sm font-bold tracking-[0.22em] text-foreground">
-        NEXUS<span className="text-primary">.</span>
+        MATCH<span className="text-primary">FORGE</span>
       </span>
     </span>
   );
@@ -97,7 +97,7 @@ function Nav() {
       }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <a href="/" aria-label="Nexus Arena home">
+        <a href="/" aria-label="MatchForge home">
           <Mark />
         </a>
         <nav className="hidden items-center gap-8 text-[13px] text-muted-foreground md:flex">

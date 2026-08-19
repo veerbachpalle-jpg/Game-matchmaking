@@ -8,12 +8,12 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
   head: () => ({
     meta: [
-      { title: "Operative Profile — Nexus Arena" },
+      { title: "Operative Profile — MatchForge" },
       {
         name: "description",
-        content: "Manage your Nexus Arena callsign, rank, squad roster and account security settings.",
+        content: "Manage your MatchForge callsign, rank, squad roster and account security settings.",
       },
-      { property: "og:title", content: "Operative Profile — Nexus Arena" },
+      { property: "og:title", content: "Operative Profile — MatchForge" },
       {
         property: "og:description",
         content: "Manage your callsign, rank, squad roster and security settings.",

@@ -1,4 +1,4 @@
-// Thin client for the Express backend (Nexus Arena).
+// Thin client for the Express backend (MatchForge).
 // Base URL is configurable so the same build works against local + deployed API.
 export const API_BASE_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||

@@ -12,13 +12,13 @@ export const Route = createFileRoute("/match/$matchId")({
   component: MatchRoom,
   head: () => ({
     meta: [
-      { title: "Match Room — Nexus Arena" },
+      { title: "Match Room — MatchForge" },
       {
         name: "description",
         content:
           "Live match room: ready-up lobby, real-time XOX duel board, MMR deltas and the certified scoreboard.",
       },
-      { property: "og:title", content: "Match Room — Nexus Arena" },
+      { property: "og:title", content: "Match Room — MatchForge" },
       {
         property: "og:description",
         content: "Ready-up lobby, live duel board, MMR deltas and the final scoreboard.",
