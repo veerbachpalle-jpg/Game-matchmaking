@@ -414,41 +414,42 @@ function FriendsList({ userId }: { userId: string }) {
   });
 
   return (
-    <div className="mt-5">
-      <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+    <div className="mt-8 relative">
+      <div className="absolute inset-0 bg-primary/5 blur-xl -z-10 rounded-3xl opacity-50" />
+      <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-primary drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
         Your Squad
       </span>
-      <ul className="mt-3 flex flex-col gap-1">
+      <ul className="mt-4 flex flex-col gap-2">
         {sorted.map((f) => (
           <li
             key={f._id}
-            className="group/fr flex items-center gap-3 px-3 py-2 border border-transparent hover:border-border/40 hover:bg-surface/20 transition-colors"
+            className="group/fr flex items-center gap-4 rounded-xl bg-surface/30 px-3 py-3 border border-white/5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-surface/60 hover:border-primary/30 hover:shadow-lg"
           >
             {f.avatar ? (
               <img
                 src={f.avatar}
                 alt={f.username}
-                className={`h-7 w-7 object-cover border flex-shrink-0 ${
-                  f.status === "offline" ? "border-border/40 opacity-50 grayscale" : "border-primary/30"
+                className={`h-10 w-10 rounded-lg object-cover ring-1 flex-shrink-0 transition-all ${
+                  f.status === "offline" ? "ring-white/10 opacity-50 grayscale" : "ring-primary/40 shadow-[0_0_12px_rgba(255,215,0,0.15)]"
                 }`}
                 loading="lazy"
               />
             ) : (
-              <span className={`grid h-7 w-7 place-items-center text-[10px] font-display border flex-shrink-0 ${
-                f.status === "offline" ? "border-border/40 bg-neutral-800/50 text-muted-foreground" : "border-primary/30 bg-primary/15 text-primary"
+              <span className={`grid h-10 w-10 rounded-lg place-items-center text-sm font-display ring-1 flex-shrink-0 transition-all ${
+                f.status === "offline" ? "ring-white/10 bg-neutral-800/50 text-muted-foreground" : "ring-primary/40 bg-primary/10 text-primary shadow-[0_0_12px_rgba(255,215,0,0.15)]"
               }`}>
                 {f.username.slice(0, 2).toUpperCase()}
               </span>
             )}
             <div className="flex-1 min-w-0">
-              <span className={`font-display text-xs font-semibold tracking-wide truncate block ${
+              <span className={`font-display text-sm font-bold tracking-wide truncate block ${
                 f.status === "offline" ? "text-muted-foreground" : "text-foreground"
               }`}>
                 {f.username}
               </span>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${statusDot(f.status)}`} />
-                <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted-foreground">
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`h-2 w-2 rounded-full flex-shrink-0 ${statusDot(f.status)} ${f.status === 'online' ? 'shadow-[0_0_8px_rgba(34,197,94,0.6)]' : ''}`} />
+                <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
                   {statusLabel(f.status)} · {f.rank} · {f.mmr} MMR
                 </span>
               </div>
@@ -456,7 +457,8 @@ function FriendsList({ userId }: { userId: string }) {
             <button
               onClick={() => handleRemove(f._id)}
               disabled={removingId === f._id}
-              className="opacity-0 group-hover/fr:opacity-100 border border-destructive/30 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-destructive/60 hover:bg-destructive/10 transition-all disabled:opacity-30"
+              className="opacity-0 group-hover/fr:opacity-100 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-destructive/70 hover:bg-destructive/20 transition-all disabled:opacity-30"
+              title="Remove friend"
             >
               {removingId === f._id ? "…" : "Remove"}
             </button>

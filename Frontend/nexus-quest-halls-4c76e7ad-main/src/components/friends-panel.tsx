@@ -96,15 +96,15 @@ export function FriendsPanel() {
   return (
     <Panel className="flex flex-col gap-5">
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-          Squad · {onlineCount}/{friends.length} online
+          Squad <span className="text-primary/70">· {onlineCount}/{friends.length} online</span>
         </span>
         {connected && (
-          <span className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
             <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-green-400">
-              Live
+              Live Network
             </span>
           </span>
         )}
@@ -129,28 +129,29 @@ export function FriendsPanel() {
 
       {/* ── Active Group ────────────────────────────────────────── */}
       {group && (
-        <div className="border border-primary/30 bg-primary/5 p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-primary">
-              Your Group · {group.members.length} members
+        <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-primary/10 to-transparent p-4 shadow-[0_4px_20px_-5px_rgba(255,215,0,0.15)] backdrop-blur-md">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-50" />
+          <div className="relative flex items-center justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-primary drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
+              Active Party · {group.members.length} members
             </span>
             <button
               onClick={leaveGroup}
-              className="font-mono text-[9px] uppercase tracking-[0.16em] text-destructive hover:text-destructive/80 transition-colors"
+              className="font-mono text-[9px] uppercase tracking-[0.16em] text-destructive/80 hover:text-destructive hover:drop-shadow-[0_0_5px_rgba(255,0,0,0.5)] transition-all"
             >
               Leave
             </button>
           </div>
-          <ul className="mt-3 flex flex-col gap-1.5">
+          <ul className="relative mt-3 flex flex-col gap-2">
             {group.members.map((m) => (
               <li
                 key={m.userId}
-                className="flex items-center gap-2 font-display text-xs tracking-wide text-foreground"
+                className="flex items-center gap-2.5 font-display text-xs tracking-wide text-foreground bg-black/20 rounded-lg px-3 py-2 border border-white/5"
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(255,215,0,0.8)]" />
                 {m.username}
                 {m.userId === group.leaderId && (
-                  <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-primary/70">
+                  <span className="ml-auto font-mono text-[8px] uppercase tracking-[0.16em] text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full">
                     Leader
                   </span>
                 )}
@@ -170,7 +171,7 @@ export function FriendsPanel() {
           No friends yet — add players from your Profile page
         </p>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-2">
           {sorted.map((f) => {
             const cfg = STATUS_CFG[f.status] ?? STATUS_CFG.offline;
             const isInGroup = group?.members.some((m) => m.userId === f._id);
@@ -179,26 +180,26 @@ export function FriendsPanel() {
             return (
               <li
                 key={f._id}
-                className="group/friend flex items-center gap-3 px-3 py-2.5 border border-transparent hover:border-border/40 hover:bg-surface/20 transition-colors"
+                className="group/friend flex items-center gap-4 rounded-xl bg-surface/30 px-3 py-3 border border-white/5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-surface/60 hover:border-primary/30 hover:shadow-lg"
               >
                 {/* Avatar */}
                 {f.avatar ? (
                   <img
                     src={f.avatar}
                     alt={f.username}
-                    className={`h-8 w-8 object-cover border flex-shrink-0 ${
+                    className={`h-10 w-10 rounded-lg object-cover ring-1 flex-shrink-0 transition-all ${
                       f.status === "offline"
-                        ? "border-border/40 opacity-50 grayscale"
-                        : "border-primary/30"
+                        ? "ring-white/10 opacity-50 grayscale"
+                        : "ring-primary/40 shadow-[0_0_12px_rgba(255,215,0,0.15)]"
                     }`}
                     loading="lazy"
                   />
                 ) : (
                   <span
-                    className={`grid h-8 w-8 place-items-center text-xs font-display border flex-shrink-0 ${
+                    className={`grid h-10 w-10 rounded-lg place-items-center text-sm font-display ring-1 flex-shrink-0 transition-all ${
                       f.status === "offline"
-                        ? "border-border/40 bg-neutral-800/50 text-muted-foreground"
-                        : "border-primary/30 bg-primary/15 text-primary"
+                        ? "ring-white/10 bg-neutral-800/50 text-muted-foreground"
+                        : "ring-primary/40 bg-primary/10 text-primary shadow-[0_0_12px_rgba(255,215,0,0.15)]"
                     }`}
                   >
                     {f.username.slice(0, 2).toUpperCase()}
@@ -209,35 +210,35 @@ export function FriendsPanel() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`font-display text-xs font-semibold tracking-wide truncate ${
+                      className={`font-display text-sm font-bold tracking-wide truncate ${
                         f.status === "offline" ? "text-muted-foreground" : "text-foreground"
                       }`}
                     >
                       {f.username}
                     </span>
                     {isInGroup && (
-                      <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-primary/70">
-                        In Group
+                      <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-primary bg-primary/10 px-1.5 py-0.5 rounded-sm">
+                        In Party
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`h-2 w-2 rounded-full flex-shrink-0 ${cfg.dot} ${f.status === 'online' ? 'shadow-[0_0_8px_rgba(34,197,94,0.6)]' : ''}`} />
                     <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
                       {cfg.label}
                     </span>
-                    <span className="font-mono text-[9px] tracking-[0.1em] text-muted-foreground/60">
-                      {f.mmr} MMR
+                    <span className="font-mono text-[9px] tracking-[0.1em] text-muted-foreground/50">
+                      | {f.mmr} MMR
                     </span>
                   </div>
                 </div>
 
-                {/* Actions (appear on hover) */}
-                <div className="flex items-center gap-1.5 opacity-0 group-hover/friend:opacity-100 transition-opacity">
+                {/* Actions */}
+                <div className="flex items-center gap-2 opacity-0 group-hover/friend:opacity-100 transition-opacity duration-200">
                   {canInvite && (
                     <button
                       onClick={() => handleInvite(f._id)}
-                      className="border border-primary/40 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-primary hover:bg-primary/10 transition-colors"
+                      className="rounded-md border border-primary/40 bg-primary/5 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-primary shadow-sm hover:bg-primary/20 hover:shadow-[0_0_10px_rgba(255,215,0,0.2)] transition-all"
                     >
                       Invite
                     </button>
@@ -245,7 +246,8 @@ export function FriendsPanel() {
                   <button
                     onClick={() => handleRemoveFriend(f._id)}
                     disabled={removingId === f._id}
-                    className="border border-destructive/30 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-destructive/70 hover:bg-destructive/10 transition-colors disabled:opacity-40"
+                    className="rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-destructive/70 hover:bg-destructive/20 transition-all disabled:opacity-40"
+                    title="Remove friend"
                   >
                     {removingId === f._id ? "…" : "✕"}
                   </button>
@@ -270,28 +272,28 @@ function InviteCard({
   onDecline: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
+    <div className="flex items-center gap-4 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 to-transparent p-3 shadow-sm backdrop-blur-sm">
       <div className="flex-1 min-w-0">
-        <span className="font-display text-xs font-semibold tracking-wide text-foreground">
+        <span className="font-display text-sm font-bold tracking-wide text-foreground drop-shadow-md">
           {invite.fromUsername}
         </span>
-        <span className="ml-1.5 font-mono text-[9px] text-muted-foreground">
-          invited you to a group
+        <span className="ml-2 font-mono text-[9px] text-muted-foreground">
+          invited you to a party
         </span>
-        <div className="mt-1 font-mono text-[8px] text-muted-foreground/70 truncate">
+        <div className="mt-1 font-mono text-[8px] text-muted-foreground/60 truncate bg-black/20 rounded px-2 py-1 border border-white/5 inline-block">
           {invite.members.map((m) => m.username).join(", ")}
         </div>
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <button
           onClick={onAccept}
-          className="border border-green-500/40 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-green-400 hover:bg-green-500/10 transition-colors"
+          className="rounded border border-green-500/50 bg-green-500/10 px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.15)] hover:bg-green-500/20 hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all"
         >
           Accept
         </button>
         <button
           onClick={onDecline}
-          className="border border-destructive/30 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-destructive/60 hover:bg-destructive/10 transition-colors"
+          className="rounded border border-destructive/40 bg-destructive/10 px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-destructive/80 hover:bg-destructive/20 transition-all"
         >
           Deny
         </button>

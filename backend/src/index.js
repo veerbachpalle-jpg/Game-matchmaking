@@ -18,8 +18,15 @@ const PORT = process.env.PORT || 8000;
 
 connectDb()
   .then(() => {
-    server.listen(PORT, () => {
+    server.listen(PORT, async () => {
       console.log(`Server is running at port ${PORT}`);
+      try {
+        const { User } = await import('./models/user.models.js');
+        await User.updateMany({}, { status: 'offline' });
+        console.log('Reset all user statuses to offline');
+      } catch (err) {
+        console.log('Failed to reset statuses on startup:', err);
+      }
       matchmaker.startWorker(io);
     });
   })
