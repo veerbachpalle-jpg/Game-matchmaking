@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import "../styles.css";
@@ -134,6 +134,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
   const isLandingPage = location.pathname === "/";
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 0.75;
+    }
+  }, [isLandingPage]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -142,6 +149,7 @@ function RootComponent() {
           {!isLandingPage && (
             <div className="fixed inset-0 z-0 pointer-events-none">
               <video
+                ref={videoRef}
                 autoPlay
                 loop
                 muted
