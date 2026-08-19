@@ -96,7 +96,7 @@ export function ArenaShell({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <ArenaNav />
       <div
         className="pointer-events-none fixed inset-x-0 top-0 h-[55vh]"
