@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { ArenaShell, ActionButton, Alert, Panel } from "@/components/arena-shell";
 import { XoxBoard, findWinningLine } from "@/components/xox-board";
 import { StatusChip } from "@/routes/matches";
@@ -59,7 +59,7 @@ function MatchRoom() {
 
   const [chatMessages, setChatMessages] = useState<MatchMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
-  const chatScrollRef = React.useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
