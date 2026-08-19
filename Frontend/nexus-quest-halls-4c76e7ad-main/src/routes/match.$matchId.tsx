@@ -243,8 +243,8 @@ function MatchRoom() {
               <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
                 Roster
               </span>
-              <ul className="mt-5 flex flex-col gap-3">
-                {data.players.map((p) => {
+              {(() => {
+                const renderPlayer = (p: MatchPlayer) => {
                   const isWinner =
                     data.result?.winnerId === p.userId || (game?.winner ?? null) === p.userId;
                   const delta = data.result?.mmrChanges?.[p.userId];
@@ -268,8 +268,8 @@ function MatchRoom() {
                           {p.username.slice(0, 2).toUpperCase()}
                         </span>
                       )}
-                      <div className="flex-1">
-                        <div className="font-display text-sm font-bold tracking-[0.14em] text-foreground">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-display text-sm font-bold tracking-[0.14em] text-foreground truncate">
                           {p.username}
                           {isBot(p.username) && (
                             <span className="ml-2 font-mono text-[9px] tracking-[0.16em] text-accent">
@@ -299,8 +299,37 @@ function MatchRoom() {
                       )}
                     </li>
                   );
-                })}
-              </ul>
+                };
+
+                if (data.gameMode === "4v4" && data.teamA && data.teamB) {
+                  return (
+                    <div className="mt-5 grid gap-6 sm:grid-cols-2">
+                      <div>
+                        <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-primary mb-3 block">
+                          Team Alpha
+                        </span>
+                        <ul className="flex flex-col gap-3">
+                          {data.teamA.map(renderPlayer)}
+                        </ul>
+                      </div>
+                      <div>
+                        <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-accent mb-3 block">
+                          Team Bravo
+                        </span>
+                        <ul className="flex flex-col gap-3">
+                          {data.teamB.map(renderPlayer)}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <ul className="mt-5 flex flex-col gap-3">
+                    {data.players.map(renderPlayer)}
+                  </ul>
+                );
+              })()}
             </Panel>
 
             {!isDuel && (
