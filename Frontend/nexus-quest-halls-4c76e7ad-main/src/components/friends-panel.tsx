@@ -137,25 +137,40 @@ export function FriendsPanel() {
         </div>
       )}
 
-      {/* ── Join by Code ────────────────────────────────────────── */}
+      {/* ── Group Actions ────────────────────────────────────────── */}
       {!group && (
-        <form onSubmit={handleJoinCodeSubmit} className="flex items-center gap-2">
-          <input
-            type="text"
-            value={joinCodeInput}
-            onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-            placeholder="Enter Team Code..."
-            maxLength={6}
-            className="flex-1 rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground outline-none transition-colors focus:border-primary/50"
-          />
+        <div className="flex flex-col gap-3 rounded-xl border border-white/5 bg-surface/20 p-3 backdrop-blur-sm">
+          <form onSubmit={handleJoinCodeSubmit} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={joinCodeInput}
+              onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
+              placeholder="Enter Team Code..."
+              maxLength={6}
+              className="flex-1 rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground outline-none transition-colors focus:border-primary/50"
+            />
+            <button
+              type="submit"
+              disabled={joinCodeInput.trim().length !== 6}
+              className="rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-primary transition-all hover:bg-primary/20 disabled:opacity-30"
+            >
+              Join
+            </button>
+          </form>
+          
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/5" />
+            <span className="font-mono text-[8px] uppercase tracking-widest text-muted-foreground/50">OR</span>
+            <div className="h-px flex-1 bg-white/5" />
+          </div>
+
           <button
-            type="submit"
-            disabled={joinCodeInput.trim().length !== 6}
-            className="rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-primary transition-all hover:bg-primary/20 disabled:opacity-30"
+            onClick={createGroup}
+            className="w-full rounded-md border border-accent/40 bg-accent/10 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-accent transition-all hover:bg-accent/20 hover:shadow-[0_0_12px_rgba(var(--color-accent),0.15)]"
           >
-            Join
+            Create Party
           </button>
-        </form>
+        </div>
       )}
 
       {/* ── Active Group ────────────────────────────────────────── */}
