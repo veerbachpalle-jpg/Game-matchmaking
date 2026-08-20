@@ -32,6 +32,7 @@ function AdminPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [blacklistHours, setBlacklistHours] = useState<Record<string, number>>({});
+  const [searchMatchId, setSearchMatchId] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -71,6 +72,10 @@ function AdminPage() {
     act(() => api.adminSubmitFourPlayerResult(matchId, team), "admin-matches");
   };
 
+  const filteredMatches = activeMatches?.filter((match: Match) => 
+    match.matchId.toLowerCase().includes(searchMatchId.toLowerCase())
+  );
+
   return (
     <div className="space-y-8">
       <ArenaShell
@@ -86,11 +91,21 @@ function AdminPage() {
           </p>
         )}
 
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by Lobby ID..."
+            value={searchMatchId}
+            onChange={(e) => setSearchMatchId(e.target.value)}
+            className="w-full bg-background border border-border text-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+          />
+        </div>
+
         <div className="grid gap-3">
-          {activeMatches?.length === 0 && !matchesLoading && (
+          {filteredMatches?.length === 0 && !matchesLoading && (
             <p className="text-sm text-muted-foreground">No active matches found.</p>
           )}
-          {activeMatches?.map((match: Match) => (
+          {filteredMatches?.map((match: Match) => (
             <Panel key={match.matchId} className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div>
