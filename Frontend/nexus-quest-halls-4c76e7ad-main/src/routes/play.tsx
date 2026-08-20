@@ -10,13 +10,13 @@ export const Route = createFileRoute("/play")({
   component: PlayPage,
   head: () => ({
     meta: [
-      { title: "Matchmaking Queue — MatchForge" },
+      { title: "Matchmaking Queue — Vector Pair" },
       {
         name: "description",
         content:
           "Pick a region and game mode, join the live MMR-based queue, and drop into your match the moment a lobby forms.",
       },
-      { property: "og:title", content: "Matchmaking Queue — MatchForge" },
+      { property: "og:title", content: "Matchmaking Queue — Vector Pair" },
       {
         property: "og:description",
         content: "Pick a region and mode, join the live queue, and drop into your match.",

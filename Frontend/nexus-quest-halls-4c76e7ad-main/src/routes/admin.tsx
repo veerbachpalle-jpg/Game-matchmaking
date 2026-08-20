@@ -9,15 +9,15 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
   head: () => ({
     meta: [
-      { title: "Operator Console — MatchForge" },
+      { title: "Admin Dashboard — Vector Pair" },
       {
         name: "description",
-        content: "Admin console for MatchForge: manage registered operatives, roles and account removals.",
+        content: "Admin console for Vector Pair: manage registered users, roles and account removals.",
       },
-      { property: "og:title", content: "Operator Console — MatchForge" },
+      { property: "og:title", content: "Admin Dashboard — Vector Pair" },
       {
         property: "og:description",
-        content: "Manage registered operatives, roles and account removals.",
+        content: "Manage registered users, roles and account removals.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -79,7 +79,7 @@ function AdminPage() {
   return (
     <div className="space-y-8">
       <ArenaShell
-        eyebrow="Operator Console"
+        eyebrow="Admin Dashboard"
         title="Active Operations"
         subtitle="Monitor ongoing matches and declare results."
       >
@@ -87,7 +87,7 @@ function AdminPage() {
         {error && <div className="mb-5"><Alert>{error}</Alert></div>}
         {matchesLoading && (
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Scanning network for active matches…
+            Scanning for active matches…
           </p>
         )}
 
@@ -155,14 +155,14 @@ function AdminPage() {
       </ArenaShell>
 
       <ArenaShell
-        eyebrow="Network Roster"
-        title="Registered operatives"
+        eyebrow="Users List"
+        title="Registered Users"
         subtitle="Manage accounts, roles, and access control."
       >
         {usersError && <Alert>{(usersError as Error).message}</Alert>}
         {usersLoading && (
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Loading roster…
+            Loading users…
           </p>
         )}
 

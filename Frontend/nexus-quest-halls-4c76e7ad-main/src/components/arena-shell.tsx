@@ -16,11 +16,13 @@ export function ArenaNav() {
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <Link to="/" className="flex items-center gap-2.5">
-          <span className="grid h-7 w-7 place-items-center border border-primary/40">
-            <span className="h-1.5 w-1.5 rotate-45 bg-primary" />
+          <span className="grid h-7 w-7 place-items-center rounded bg-primary/10 border border-primary/30">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+              <path d="M4 4l8 16 8-16" />
+            </svg>
           </span>
           <span className="font-display text-sm font-bold tracking-[0.22em] text-foreground">
-            MATCH<span className="text-primary">FORGE</span>
+            VECTOR<span className="text-primary">PAIR</span>
           </span>
         </Link>
 

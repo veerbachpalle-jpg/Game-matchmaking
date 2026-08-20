@@ -9,13 +9,13 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "MATCHFORGE — Competitive Matchmaking & Instant Play" },
+      { title: "VECTOR PAIR — Competitive Matchmaking & Instant Play" },
       {
         name: "description",
         content:
           "Skill-based matchmaking in under 8 seconds. Queue, drop into the arena, and climb the global ladder across every title you play.",
       },
-      { property: "og:title", content: "MATCHFORGE — Competitive Matchmaking & Instant Play" },
+      { property: "og:title", content: "VECTOR PAIR — Competitive Matchmaking & Instant Play" },
       {
         property: "og:description",
         content:
@@ -27,36 +27,7 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const MODES = [
-  {
-    tag: "01",
-    name: "Ranked Ladder",
-    copy: "Elo-tuned brackets, seasonal resets, and anti-smurf detection on every queue.",
-    stat: "7.4s",
-    statLabel: "avg queue",
-  },
-  {
-    tag: "02",
-    name: "Squad Arena",
-    copy: "Auto-built five-stacks from role preference, latency, and voice comfort.",
-    stat: "12M",
-    statLabel: "matches run",
-  },
-  {
-    tag: "03",
-    name: "Instant Play",
-    copy: "Zero install. Stream any supported title straight into the browser at 60fps.",
-    stat: "18ms",
-    statLabel: "edge latency",
-  },
-];
-
-const TICKER = [
-  "Season 07 — Eclipse Protocol live",
-  "Global ladder reset in 04d 11h",
-  "Crossplay enabled on all regions",
-  "Anti-smurf model v4 deployed",
-];
+// Removed MODES and TICKER arrays
 
 function SceneFallback() {
   return (
@@ -69,11 +40,13 @@ function SceneFallback() {
 function Mark() {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="grid h-7 w-7 place-items-center border border-primary/40">
-        <span className="h-1.5 w-1.5 rotate-45 bg-primary" />
+      <span className="grid h-7 w-7 place-items-center rounded bg-primary/10 border border-primary/30">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+          <path d="M4 4l8 16 8-16" />
+        </svg>
       </span>
       <span className="font-display text-sm font-bold tracking-[0.22em] text-foreground">
-        MATCH<span className="text-primary">FORGE</span>
+        VECTOR<span className="text-primary">PAIR</span>
       </span>
     </span>
   );
@@ -97,7 +70,7 @@ function Nav() {
       }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <a href="/" aria-label="MatchForge home">
+        <a href="/" aria-label="Vector Pair home">
           <Mark />
         </a>
         <nav className="hidden items-center gap-8 text-[13px] text-muted-foreground md:flex">
@@ -151,31 +124,19 @@ function Hero() {
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pt-28 pb-16">
         <div className="max-w-2xl">
-          <div className="animate-rise flex items-center gap-3">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-            <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-primary">
-              Season 07
-            </span>
-            <span className="h-px w-10 bg-border" />
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Eclipse Protocol
-            </span>
-          </div>
-
           <h1
             className="animate-rise mt-8 font-display text-[clamp(2.9rem,7vw,5.5rem)] font-bold leading-[0.94] tracking-[-0.035em]"
             style={{ animationDelay: "0.08s" }}
           >
             <span className="block text-foreground">Matched in seconds.</span>
-            <span className="block text-gradient">Legendary forever.</span>
+            <span className="block text-gradient">Play instantly.</span>
           </h1>
 
           <p
             className="animate-rise mt-7 max-w-lg text-[15px] leading-relaxed text-muted-foreground"
             style={{ animationDelay: "0.16s" }}
           >
-            A matchmaking engine built for competitive integrity — skill-tuned lobbies, sub-20ms
-            edge routing, and instant browser play across every arena on the network.
+            A clean matchmaking engine built for competitive play — skill-tuned lobbies and fast edge routing.
           </p>
 
           <div
@@ -230,66 +191,7 @@ function Hero() {
   );
 }
 
-function Ticker() {
-  return (
-    <div className="relative overflow-hidden border-y border-border/70 bg-surface/25 py-2.5">
-      <div className="flex gap-12 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-        {[...TICKER, ...TICKER, ...TICKER].map((t, i) => (
-          <span key={i} className="flex items-center gap-12">
-            {t}
-            <span className="h-1 w-1 rotate-45 bg-primary/70" />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Modes() {
-  return (
-    <section id="modes" className="relative mx-auto max-w-6xl px-6 py-24">
-      <div className="flex flex-col gap-4 border-b border-border/70 pb-8 md:flex-row md:items-end md:justify-between">
-        <div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            The network
-          </span>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight tracking-[-0.03em] sm:text-4xl">
-            Three ways to drop in
-          </h2>
-        </div>
-        <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-          Every queue runs on the same rating core — pick the format, the engine handles the rest.
-        </p>
-      </div>
-
-      <div className="mt-px grid gap-px bg-border/70 md:grid-cols-3">
-        {MODES.map((m) => (
-          <article
-            key={m.tag}
-            className="group relative flex flex-col justify-between bg-background p-8 transition-colors duration-300 hover:bg-surface/40"
-          >
-            <div>
-              <span className="font-mono text-[10px] tracking-[0.3em] text-muted-foreground">
-                {m.tag}
-              </span>
-              <h3 className="mt-6 font-display text-xl font-bold tracking-[-0.02em] text-foreground">
-                {m.name}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{m.copy}</p>
-            </div>
-            <div className="mt-12 flex items-baseline justify-between border-t border-border/70 pt-5">
-              <span className="font-mono text-2xl font-medium text-primary">{m.stat}</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
-                {m.statLabel}
-              </span>
-            </div>
-            <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
+// Removed Ticker and Modes helper components
 
 function CTA() {
   return (
@@ -345,8 +247,6 @@ function Index() {
       )}
       <Nav />
       <Hero />
-      <Ticker />
-      <Modes />
       <CTA />
       <Footer />
     </main>

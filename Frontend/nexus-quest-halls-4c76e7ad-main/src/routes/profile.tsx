@@ -8,15 +8,15 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
   head: () => ({
     meta: [
-      { title: "Operative Profile — MatchForge" },
+      { title: "User Profile — Vector Pair" },
       {
         name: "description",
-        content: "Manage your MatchForge callsign, rank, squad roster and account security settings.",
+        content: "Manage your Vector Pair profile, rank, friends list and account security settings.",
       },
-      { property: "og:title", content: "Operative Profile — MatchForge" },
+      { property: "og:title", content: "User Profile — Vector Pair" },
       {
         property: "og:description",
-        content: "Manage your callsign, rank, squad roster and security settings.",
+        content: "Manage your profile, rank, friends list and security settings.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -75,7 +75,7 @@ function ProfilePage() {
     setNotice(null);
     try {
       await api.addFriendByUsername(targetUser.username);
-      setNotice(`${targetUser.username} added to your squad!`);
+      setNotice(`${targetUser.username} added to your friends!`);
       // Remove from search results
       setSearchResults((prev) => prev.filter((u) => u._id !== targetUser._id));
       await refresh();
@@ -120,7 +120,7 @@ function ProfilePage() {
   };
 
   return (
-    <ArenaShell eyebrow="Dossier" title={user.username} subtitle={user.email}>
+    <ArenaShell eyebrow="Profile" title={user.username} subtitle={user.email}>
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <Panel className="overflow-hidden p-0">
           <div className="relative group">
@@ -257,7 +257,7 @@ function ProfilePage() {
                         {addingUserId === result._id
                           ? "Adding…"
                           : isAlreadyFriend
-                            ? "In Squad"
+                            ? "Friend"
                             : "Add"}
                       </ActionButton>
                     </div>

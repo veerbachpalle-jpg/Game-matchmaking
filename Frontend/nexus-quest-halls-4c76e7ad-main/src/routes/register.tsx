@@ -42,12 +42,12 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
   head: () => ({
     meta: [
-      { title: "Create Profile — MatchForge" },
+      { title: "Create Profile — Vector Pair" },
       {
         name: "description",
-        content: "Create your MatchForge profile, upload your avatar, and start climbing the competitive ladder.",
+        content: "Create your Vector Pair profile, upload your avatar, and start climbing the competitive ladder.",
       },
-      { property: "og:title", content: "Create Profile — MatchForge" },
+      { property: "og:title", content: "Create Profile — Vector Pair" },
       {
         property: "og:description",
         content: "Create your profile and start climbing the competitive ladder.",

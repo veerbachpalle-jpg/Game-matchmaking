@@ -10,12 +10,12 @@ export const Route = createFileRoute("/matches")({
   component: MatchesPage,
   head: () => ({
     meta: [
-      { title: "Match History — MatchForge" },
+      { title: "Match History — Vector Pair" },
       {
         name: "description",
-        content: "Review your recent four-player MatchForge matches, lobby rosters, MMR snapshots and results.",
+        content: "Review your recent four-player Vector Pair matches, lobby rosters, MMR snapshots and results.",
       },
-      { property: "og:title", content: "Match History — MatchForge" },
+      { property: "og:title", content: "Match History — Vector Pair" },
       {
         property: "og:description",
         content: "Review your recent matches, rosters, MMR snapshots and results.",
