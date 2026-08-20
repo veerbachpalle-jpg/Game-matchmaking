@@ -533,6 +533,37 @@ const removeFriend = asynchandler(async (req, res) => {
     )
 })
 
+const blacklistuser = asynchandler(async (req, res) => {
+  const { userId } = req.params
+  const { hours } = req.body
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new apiError(400, "Invalid user Id")
+  }
+
+  const durationHours = parseInt(hours, 10)
+  if (isNaN(durationHours) || durationHours <= 0) {
+    throw new apiError(400, "Valid duration in hours is required")
+  }
+
+  const blacklistedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000)
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { blacklistedUntil },
+    { returnDocument: 'after' }
+  ).select("-password -refreshtoken")
+
+  if (!user) {
+    throw new apiError(404, "User not found")
+  }
+  return res
+    .status(200)
+    .json(
+      new apiresponse(200, user, `User blacklisted for ${durationHours} hours`)
+    )
+})
+
 export {
   registeruser,
   loginuser,
@@ -550,5 +581,6 @@ export {
   verifyEmail,
   resendOtp,
   getFriends,
-  removeFriend
+  removeFriend,
+  blacklistuser
 }

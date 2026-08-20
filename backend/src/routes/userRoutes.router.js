@@ -18,7 +18,8 @@ import {
   verifyEmail,
   resendOtp,
   getFriends,
-  removeFriend
+  removeFriend,
+  blacklistuser
 } from "../controllers/usercontroller.js";
 
 const router = Router()
@@ -56,5 +57,6 @@ router.route("/resend-otp").post(verifyJWT, resendOtp)
 router.route("/admin/users").get(verifyJWT, verifyAdmin, getallusers)
 router.route("/admin/users/:userId").delete(verifyJWT, verifyAdmin, deleteuserbyid)
 router.route("/admin/users/:userId/role").patch(verifyJWT, verifyAdmin, updateuserrole)
+router.route("/admin/users/:userId/blacklist").patch(verifyJWT, verifyAdmin, blacklistuser)
 
 export default router

@@ -204,4 +204,13 @@ export const api = {
 
   adminUpdateRole: (userId: string, role: "user" | "admin") =>
     apiFetch(`/user/admin/users/${userId}/role`, { method: "PATCH", body: { role } }),
+
+  adminBlacklistUser: (userId: string, hours: number) =>
+    apiFetch(`/user/admin/users/${userId}/blacklist`, { method: "PATCH", body: { hours } }),
+
+  adminGetActiveMatches: () =>
+    apiFetch<Match[]>("/match/active"),
+
+  adminSubmitFourPlayerResult: (matchId: string, winningTeam: "teamA" | "teamB") =>
+    apiFetch(`/match/four-player/${matchId}/result`, { method: "POST", body: { winningTeam } }),
 };

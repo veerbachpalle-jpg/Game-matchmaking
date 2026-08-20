@@ -22,6 +22,10 @@ const verifyJWT = asynchandler(async (req, res, next) => {
     throw new apiError(401, "Invalid access token")
   }
 
+  if (user.blacklistedUntil && user.blacklistedUntil > new Date()) {
+    throw new apiError(403, "Your account is temporarily suspended")
+  }
+
   req.user = user
   next()
 })

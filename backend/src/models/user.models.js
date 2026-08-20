@@ -64,6 +64,10 @@ const UserSchema = new Schema({
   },
   emailOtpExpiry: {
     type: Date
+  },
+  blacklistedUntil: {
+    type: Date,
+    default: null
   }
 
 },{timestamps:true})

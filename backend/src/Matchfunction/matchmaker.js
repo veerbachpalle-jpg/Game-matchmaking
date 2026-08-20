@@ -45,6 +45,8 @@ async function getOrCreateBotUsers(count) {
 const REGIONS = ['mid-india', 'south-india', 'north-india'];
 const GAMEMODES = ['1v1', '4v4'];
 
+let socketIoInstance = null;
+
 export const matchmaker = {
   async addticket(
     userId,
@@ -111,6 +113,7 @@ export const matchmaker = {
     }
   },
   startWorker(io) {
+    socketIoInstance = io;
     console.log("Matchmaking started")
     setInterval(async () => {
       try {
@@ -528,9 +531,37 @@ export const matchmaker = {
     });
   }),
 
+  adminGetActiveMatches: asynchandler(async (req, res) => {
+    const matches = await Matchhistory.find({
+      status: { $in: ['grouped', 'ongoing'] }
+    })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate('players.user', 'username avatar rank');
+
+    return res.status(200).json({
+      success: true,
+      data: matches.map((match) => ({
+        matchId: match._id.toString(),
+        gameMode: match.gameMode,
+        status: match.status,
+        players: match.players.map((p) => ({
+          userId: p.user?._id?.toString() || p.user?.toString() || "Unknown",
+          username: p.user?.username || "Operative",
+          avatar: p.user?.avatar || "",
+          rank: p.user?.rank || "Unranked",
+          mmrAtMatch: p.mmratmatch,
+        })),
+        teamA: match.teamA || [],
+        teamB: match.teamB || [],
+        createdAt: match.createdAt,
+      })),
+    });
+  }),
+
   submitFourPlayerResult: asynchandler(async (req, res) => {
     const { matchId } = req.params;
-    const { winnerId, scores } = req.body;
+    const { winningTeam } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(matchId)) {
       return res.status(400).json({
@@ -539,7 +570,7 @@ export const matchmaker = {
       });
     }
 
-    const match = await Matchhistory.findById(matchId);
+    const match = await Matchhistory.findById(matchId).populate('players.user');
 
     if (!match) {
       return res.status(404).json({
@@ -548,26 +579,89 @@ export const matchmaker = {
       });
     }
 
-    if (match.status !== 'completed') {
+    if (match.status === 'completed') {
       return res.status(400).json({
         success: false,
-        message: "Match result already submitted or match is cancelled"
+        message: "Match result already submitted"
       });
     }
 
-    const playerIds = match.players.map(p => p.user.toString());
-    if (winnerId && !playerIds.includes(winnerId)) {
+    if (match.gameMode !== '4v4') {
       return res.status(400).json({
         success: false,
-        message: "Winner must be one of the match players"
+        message: "This endpoint is for 4v4 matches only"
       });
     }
 
+    if (!winningTeam || !['teamA', 'teamB'].includes(winningTeam)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid winningTeam ('teamA' or 'teamB') is required"
+      });
+    }
+
+    // Process MMR updates
+    const mmrChanges = {};
+    const teamAIds = match.teamA.map(id => id.toString());
+    const teamBIds = match.teamB.map(id => id.toString());
+
+    // Basic ELO calculation for 4v4
+    const K = 32;
+    let teamASum = 0;
+    let teamBSum = 0;
+    
+    match.players.forEach(p => {
+      const pId = p.user._id.toString();
+      if (teamAIds.includes(pId)) teamASum += (p.user.mmr || 1000);
+      if (teamBIds.includes(pId)) teamBSum += (p.user.mmr || 1000);
+    });
+
+    const teamAAvg = Math.max(100, Math.round(teamASum / (teamAIds.length || 1)));
+    const teamBAvg = Math.max(100, Math.round(teamBSum / (teamBIds.length || 1)));
+
+    const eA = 1 / (1 + Math.pow(10, (teamBAvg - teamAAvg) / 400));
+    const eB = 1 / (1 + Math.pow(10, (teamAAvg - teamBAvg) / 400));
+
+    const sA = winningTeam === 'teamA' ? 1 : 0;
+    const sB = winningTeam === 'teamB' ? 1 : 0;
+
+    for (const p of match.players) {
+      const pId = p.user._id.toString();
+      const currentMmr = p.user.mmr || 1000;
+      let newMmr = currentMmr;
+      
+      if (teamAIds.includes(pId)) {
+        newMmr = Math.max(100, Math.round(currentMmr + K * (sA - eA)));
+      } else if (teamBIds.includes(pId)) {
+        newMmr = Math.max(100, Math.round(currentMmr + K * (sB - eB)));
+      }
+      
+      const change = newMmr - currentMmr;
+      mmrChanges[pId] = change;
+
+      // Update user MMR and set status to online
+      await User.findByIdAndUpdate(pId, { 
+        $set: { mmr: newMmr, status: 'online' } 
+      });
+    }
+
+    match.status = 'completed';
     match.result = {
-      winnerId: winnerId || null,
-      scores: scores || {}
+      winningTeam,
+      mmrChanges
     };
     await match.save();
+
+    // Broadcast result to players
+    if (socketIoInstance) {
+      match.players.forEach(p => {
+        socketIoInstance.to(p.user._id.toString()).emit('match-result', {
+          matchId: match._id,
+          winningTeam,
+          mmrChange: mmrChanges[p.user._id.toString()]
+        });
+      });
+    }
 
     return res.status(200).json({
       success: true,
